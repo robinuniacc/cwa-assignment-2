@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import "./globals.css";
 import { ThemeProvider } from "next-themes";
 import Navbar from "./components/Navbar";
+import Footer from "./components/Footer";
 import { Poppins } from "next/font/google";
 
 const poppins = Poppins({
@@ -30,6 +31,7 @@ export default function RootLayout({
           <hr className="hidden dark:block" />
           {children}
           <hr className="hidden dark:block" />
+          <Footer />
         </ThemeProvider>
       </body>
     </html>
