@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
+import CodePreview from "./components/CodeViewbox";
 import TabContentEditor from "./components/TabContentEditor";
 import TabNavigationBar from "./components/TabNavigationBar";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
@@ -9,6 +10,8 @@ import { faTrash } from "@fortawesome/free-solid-svg-icons/faTrash";
 import useLocalStorageTabsInitLoad from "@/hooks/useLocalStorageTabsInitLoad";
 import { setCookie } from "@/lib/web";
 import { generateTabId, Tab } from "@/lib/tab";
+import { generateHTMLFromTabs } from "@/lib/html";
+
 
 export default function Home() {
   const [tabs, setTabs] = useState<Tab[]>([
@@ -127,6 +130,8 @@ export default function Home() {
             updateActiveTab={updateActiveTab}
           />
         </div>
+
+        <CodePreview htmlContent={generateHTMLFromTabs(tabs)} />
       </div>
     </div>
   );
