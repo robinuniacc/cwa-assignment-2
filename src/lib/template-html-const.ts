@@ -1,0 +1,127 @@
+const tabTitleTemplate = `          <button data-tab="{{tabId}}" data-active-tab>
+            {{tabTitle}}
+          </button>`;
+const tabPanelTemplate = `          <div data-tab-panel="{{tabId}}">
+{{tabPanelContent}}
+          </div>`;
+const pageTemplate = `<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Tabbed Website</title>
+    <!-- Styles moved inline below -->
+  </head>
+  <body style="margin: 0">
+    <div style="margin: 0 auto; min-height: 100vh">
+      <!-- Navbar -->
+      <header
+        style="
+          background-color: #242424;
+          color: white;
+          text-align: center;
+          padding: 1.5rem 0;
+        "
+      >
+        <h1 style="font-size: 2.5rem; font-weight: 300; margin: 0">
+          Tabbed Content for LMS Preview
+        </h1>
+      </header>
+
+      <div style="
+        border: 1px solid #bbb;
+        border-radius: 1rem;
+        margin: 1rem 2rem;
+        padding-bottom: 1rem;
+      ">
+        <nav
+          style="display: flex;
+           flex-wrap: wrap; 
+           justify-content: flex-start;
+        ">
+{{tabTitleHtmls}}
+        </nav>
+
+        <hr style="border: 1px solid #ddd;
+        margin: 0;"/>
+
+        <main
+          style="
+            padding: 1rem 2rem;
+            min-height: 66vh;
+            background-color: #fff;
+            flex: 1;
+          "
+        >
+{{tabPanelHtmls}}
+        </main>
+      </div>
+    </div>
+
+    <footer style="
+      background-color: #e2231b;
+      color: white;
+      text-align: center;
+      padding: 2rem 0;
+    ">
+      <p>Copyright © 2025 - Robin Sao - 21905099</p>
+    </footer>
+
+  <script>
+    const defaultTabStyle = \`
+            background-color: white;
+            border: none;
+            border-radius: 1rem 1rem 0 0;
+            color: black;
+            font-size: 1.1rem;
+            padding: 1rem 2rem;
+            cursor: pointer;
+            font-weight: 500;
+            z-index: 10;
+    \`;
+
+    const activeTabStyle = \`
+            background-color: #ee0000;
+            color: white;
+    \`;
+    // Tab functionality using data-active-tab and inline styles
+    document.addEventListener("DOMContentLoaded", function () {
+      const tabButtons = document.querySelectorAll("[data-tab]");
+      const tabPanels = document.querySelectorAll("[data-tab-panel]");
+
+      switchTab(tabButtons[0].getAttribute("data-tab"));
+
+      function switchTab(targetTab) {
+        // Update tab buttons
+        tabButtons.forEach((button) => {
+          if (button.getAttribute("data-tab") === targetTab) {
+            button.setAttribute("data-active-tab", "true");
+            button.style.cssText = defaultTabStyle + activeTabStyle;
+          } else {
+            button.removeAttribute("data-active-tab");
+            button.style.cssText = defaultTabStyle;
+          }
+        });
+
+        // Update tab panels
+        tabPanels.forEach((panel) => {
+          if (panel.getAttribute("data-tab-panel") === targetTab) {
+            panel.style.display = "block";
+          } else {
+            panel.style.display = "none";
+          }
+        });
+      }
+
+      tabButtons.forEach((button) => {
+        button.addEventListener("click", function () {
+          const targetTab = this.getAttribute("data-tab");
+          switchTab(targetTab);
+        });
+      });
+    });
+  </script>
+  </body>
+</html>`;
+
+export { tabTitleTemplate, tabPanelTemplate, pageTemplate };
