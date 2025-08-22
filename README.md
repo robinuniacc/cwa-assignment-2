@@ -2,6 +2,8 @@
 
 This project allows use to generate HTML code for LMS-compatible tabbed content. This project uses [Next.js](https://nextjs.org/) and [TailwindCSS](https://tailwindcss.com/).
 
+Video can be found in the `public` folder.
+
 # Getting Started
 
 Follow these steps to set up and run the project locally:
