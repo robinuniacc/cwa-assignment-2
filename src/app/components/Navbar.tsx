@@ -19,19 +19,28 @@ export default function Navbar() {
           Content Builder for LMS
         </div>
       </div>
-      <p className="hidden sm:block sm:text-lg sm:mt-7 lg:mt-10 absolute right-4 top-0">Robin Sao 21905099</p>
+      <p className="hidden sm:block sm:text-lg sm:mt-7 lg:mt-10 absolute right-4 top-0">
+        Robin Sao 21905099
+      </p>
 
       <hr />
 
       <nav className="flex-col md:flex-row flex h-auto items-center justify-between relative">
-        <div className={cn("flex [&>*]:hover:underline decoration-[var(--color-red-latrobe)] decoration-2 [&>*]:text-center", `[&>*]:px-4 md:[&>*]:px-8 [&>*]:py-4`)}>
-          <Link href="/" className="flex items-center">Tabs</Link>
+        <div
+          className={cn(
+            "flex [&>*]:hover:underline decoration-[var(--color-red-latrobe)] decoration-2 [&>*]:text-center",
+            `[&>*]:px-4 md:[&>*]:px-8 [&>*]:py-4`,
+          )}
+        >
+          <Link href="/" className="flex items-center">
+            Tabs
+          </Link>
           <Link href="/pre-lab-questions">Pre-lab Questions</Link>
           <Link href="/escape-room">Escape Room</Link>
           <Link href="/coding-races">Coding Races</Link>
         </div>
 
-        <hr className="w-full md:hidden"/>
+        <hr className="w-full md:hidden" />
 
         <div className="flex h-14 md:h-full pr-2 items-center gap-4 lg:gap-6 relative">
           <div className="h-full flex items-center [&>*]:px-2 gap-4 md:gap-6">
@@ -42,10 +51,13 @@ export default function Navbar() {
               className="border-none bg-[var(--color-red-latrobe)] dark:bg-transparent scale-125 [&>*]:hover:cursor-pointer"
             />
           </div>
-          <Link href="/about" className="h-full flex items-center justify-center hover:underline decoration-[var(--color-red-latrobe)] decoration-2 px-2">
+          <Link
+            href="/about"
+            className="h-full flex items-center justify-center hover:underline decoration-[var(--color-red-latrobe)] decoration-2 px-2"
+          >
             About
           </Link>
-          <HamburgerButton />  
+          <HamburgerButton />
         </div>
       </nav>
     </header>
@@ -73,32 +85,36 @@ function HamburgerButton() {
     document.addEventListener("click", handle);
     return () => document.removeEventListener("click", handle);
   }, [open]);
-  return <> 
-    <button
-      ref={buttonRef}
-      aria-label="Open menu"
-      onClick={() => setOpen((v) => !v)}
-      className={
-        `h-full  flex items-center justify-center w-12 relative z-20 bg-transparent border-none outline-none transition-transform duration-300 ease-[cubic-bezier(.4,2,.6,1)] ${open ? 'rotate-90' : ''}`
-      }
-      style={{ cursor: "pointer" }}
-    >
-      <span className="sr-only">Open menu</span>
-      <FontAwesomeIcon
-        icon={open ? faTimes : faBars}
-        size="lg"
-        className="transition-transform duration-300 ease-[cubic-bezier(.4,2,.6,1)]"
-      />
-    </button>
-    {/* Popup */}
-    {open && (
-      <div
-        ref={popupRef}
-        className="absolute top-16 right-0 h-auto text-foreground bg-background dark:bg-[#444] shadow-lg border-1 rounded-2xl overflow-clip w-40 flex flex-col hover:[&>*]:cursor-pointer"
+  return (
+    <>
+      <button
+        ref={buttonRef}
+        aria-label="Open menu"
+        onClick={() => setOpen((v) => !v)}
+        className={`h-full  flex items-center justify-center w-12 relative z-20 bg-transparent border-none outline-none transition-transform duration-300 ease-[cubic-bezier(.4,2,.6,1)] ${open ? "rotate-90" : ""}`}
+        style={{ cursor: "pointer" }}
       >
-        <button className="px-4 py-3 rounded hover:bg-foreground/15 text-left">Action 1</button>
-        <button className="px-4 py-3 rounded hover:bg-foreground/15 text-left">Action 2</button>
-      </div>
-    )}
-  </>;
+        <span className="sr-only">Open menu</span>
+        <FontAwesomeIcon
+          icon={open ? faTimes : faBars}
+          size="lg"
+          className="transition-transform duration-300 ease-[cubic-bezier(.4,2,.6,1)]"
+        />
+      </button>
+      {/* Popup */}
+      {open && (
+        <div
+          ref={popupRef}
+          className="absolute top-16 right-0 h-auto text-foreground bg-background dark:bg-[#444] shadow-lg border-1 rounded-2xl overflow-clip w-40 flex flex-col hover:[&>*]:cursor-pointer"
+        >
+          <button className="px-4 py-3 rounded hover:bg-foreground/15 text-left">
+            Action 1
+          </button>
+          <button className="px-4 py-3 rounded hover:bg-foreground/15 text-left">
+            Action 2
+          </button>
+        </div>
+      )}
+    </>
+  );
 }
