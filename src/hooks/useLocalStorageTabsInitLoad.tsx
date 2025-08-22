@@ -1,5 +1,6 @@
 import { generateTabId, Tab } from "@/lib/tab";
 import { useEffect } from "react";
+import Cookies from "js-cookie";
 
 export default function useLocalStorageTabsInitLoad({
   setTabs,
@@ -11,7 +12,7 @@ export default function useLocalStorageTabsInitLoad({
   useEffect(() => {
     try {
       const raw = localStorage.getItem("tabs");
-      const savedActive = localStorage.getItem("activeTabId");
+      const savedActive = Cookies.get("activeTabId");
       if (raw) {
         const parsed: Tab[] = JSON.parse(raw);
         if (Array.isArray(parsed) && parsed.length > 0) {

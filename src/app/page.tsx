@@ -11,7 +11,7 @@ import useLocalStorageTabsInitLoad from "@/hooks/useLocalStorageTabsInitLoad";
 import { setCookie } from "@/lib/web";
 import { generateTabId, Tab } from "@/lib/tab";
 import { generateHTMLFromTabs } from "@/lib/html";
-
+import Cookies from "js-cookie";
 
 export default function Home() {
   const [tabs, setTabs] = useState<Tab[]>([
@@ -36,7 +36,7 @@ export default function Home() {
   useEffect(() => {
     try {
       localStorage.setItem("tabs", JSON.stringify(tabs));
-      localStorage.setItem("activeTabId", activeTabId ?? "");
+      Cookies.set("activeTabId", activeTabId ?? "");
     } catch {}
   }, [tabs, activeTabId]);
 
