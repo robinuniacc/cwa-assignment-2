@@ -24,7 +24,7 @@ export default function RootLayout({
   return (
     <html lang="en" suppressHydrationWarning>
       <body
-        className={`${poppins.variable} antialiased font-(family-name:--font-poppins)`}
+        className={`${poppins.variable} transition-colors duration-500 antialiased font-(family-name:--font-poppins)`}
       >
         <ThemeProvider enableSystem>
           <Navbar />
