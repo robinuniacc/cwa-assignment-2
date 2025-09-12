@@ -32,7 +32,7 @@ export default function Navbar() {
             `[&>*]:px-4 md:[&>*]:px-8 [&>*]:py-4`,
           )}
         >
-          <Link href="/" className="flex items-center">
+          <Link href="/tab-generator" className="flex items-center">
             Tabs
           </Link>
           <Link href="/pre-lab-questions">Pre-lab Questions</Link>
