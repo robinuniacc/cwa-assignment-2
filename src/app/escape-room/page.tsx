@@ -1,6 +1,6 @@
 "use client";
 import { useState } from "react";
-import Builder from "./Editor";
+import Editor from "./Editor";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faTrash } from "@fortawesome/free-solid-svg-icons";
 import useAttemptRestore from "./loadFromBrowserStorage";
@@ -75,12 +75,12 @@ export default function EscapeRoomPage() {
               type="button"
               onClick={() => setIsQuestionsPanelOpen(!isQuestionsPanelOpen)}
               className="flex items-center gap-1 px-3 py-1.5 bg-[var(--color-red-latrobe)] text-white rounded hover:cursor-pointer hover:opacity-80"
-              title="Toggle Questions Panel"
+              title="Find-question Panel"
             >
-              Toggle Sidepanel
+              Find-Question Panel
             </button>
           </div>
-          <Builder
+          <Editor
             bgImgUrl={bgImgUrl}
             questions={questions}
             setQuestions={setQuestions}

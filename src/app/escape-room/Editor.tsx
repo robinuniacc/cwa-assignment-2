@@ -2,6 +2,7 @@
 
 import {
   Dialog,
+  DialogClose,
   DialogContent,
   DialogTitle,
   DialogTrigger,
@@ -23,52 +24,106 @@ const defaultQuestion: Omit<Question, "position" | "id"> = {
   answer: "Paris",
 };
 
-const questionTargetSize = 32;
+const HIGHLIGHTED_QUESTION_ANIMATION_MS = 2000;
+const QUESTION_TARGET_SIZE = 60;
+
+function limitStrLen(str: string, n: number) {
+  return str.length > n ? str.slice(0, n - 1) + "…" : str;
+}
 
 function getQuestionTargetCSSTop(y: number) {
-  return y - questionTargetSize / 2;
+  return y - QUESTION_TARGET_SIZE / 2;
 }
 
 function getQuestionTargetCSSLeft(x: number) {
-  return x - questionTargetSize / 2;
+  return x - QUESTION_TARGET_SIZE / 2;
+}
+
+function QuestionsPanelEntry({
+  q,
+  setHighlightedQuestionId,
+  className,
+}: {
+  q: Question;
+  setHighlightedQuestionId: React.Dispatch<React.SetStateAction<string | null>>;
+  className?: string;
+}) {
+  return (
+    <button
+      key={q.id}
+      className={cn(
+        "text-left min-w-full border p-2 mb-2 rounded hover:cursor-pointer",
+        className,
+      )}
+      onClick={() => setHighlightedQuestionId(q.id)}
+    >
+      <p>Type: {q.type}</p>
+      <p>Q: {limitStrLen(q.prompt, 32)}</p>
+    </button>
+  );
 }
 
 function QuestionsPanel({
   questions,
   className,
+  highlightedQuestionId,
+  setHighlightedQuestionId,
 }: {
   questions: Question[];
   className?: string;
+  highlightedQuestionId: string | null;
+  setHighlightedQuestionId: React.Dispatch<React.SetStateAction<string | null>>;
 }) {
   return (
-    <div className={className}>
+    <div className={cn(className)}>
       {questions.map((q) => (
-        <div key={q.id} className="border p-2 mb-2 rounded">
-          <form className="grid grid-cols-[auto_1fr] gap-2">
-            <label>ID: </label>
-            <input type="text" readOnly value={q.id} className="mb-1" />
-          </form>
-          <p>{q.type}</p>
-          <p>{q.prompt}</p>
-        </div>
+        <QuestionsPanelEntry
+          key={q.id}
+          q={q}
+          className={
+            highlightedQuestionId == q.id
+              ? "border-[var(--color-red-latrobe)] border-2"
+              : ""
+          }
+          setHighlightedQuestionId={setHighlightedQuestionId}
+        />
       ))}
     </div>
   );
 }
 
-function QuestionTarget({
+function QuestionSprite({
   question,
   deleteQuestion,
   updateQuestion,
+  isHighlighted,
+  defaultOpen = false,
 }: {
   question: Question;
   deleteQuestion: (id: string) => void;
-  updateQuestion: (id: string, updated: Partial<Question>) => void;
+  updateQuestion: (id: string, updated: Partial<Question>) => boolean;
+  isHighlighted?: boolean;
+  defaultOpen?: boolean;
 }) {
   const ref = useRef<HTMLButtonElement>(null);
   const [isMouseDown, setIsMouseDown] = useState(false);
   const [stopNextClick, setStopNextClick] = useState(false);
   const positionRef = useRef(question.position);
+  const [isAnimating, setIsAnimating] = useState(false);
+
+  useEffect(() => {
+    if (isHighlighted) {
+      setIsAnimating(true);
+      const timeout = setTimeout(
+        () => setIsAnimating(false),
+        HIGHLIGHTED_QUESTION_ANIMATION_MS,
+      );
+      return () => {
+        clearTimeout(timeout);
+        setIsAnimating(false);
+      };
+    }
+  }, [isHighlighted]);
 
   const onWindowMouseMoveCallback = useCallback(
     (e: MouseEvent) => {
@@ -118,10 +173,13 @@ function QuestionTarget({
   }, [isMouseDown, onWindowMouseMoveCallback]);
 
   return (
-    <Dialog>
+    <Dialog defaultOpen={defaultOpen}>
       <DialogTrigger
         ref={ref}
-        className="min-w-8 min-h-8 rounded-4xl bg-blue-400 absolute cursor-pointer"
+        className={cn(
+          "absolute cursor-pointer",
+          isAnimating ? "animate-bounce animation-duration-[300ms]" : "",
+        )}
         style={{
           top: getQuestionTargetCSSTop(question.position.centerY),
           left: getQuestionTargetCSSLeft(question.position.centerX),
@@ -144,7 +202,20 @@ function QuestionTarget({
         onMouseUp={onMouseUp}
         // Prevent dialog open on drag
         tabIndex={0}
-      ></DialogTrigger>
+      >
+        <div
+          className="min-w-8 min-h-8 rounded-4xl bg-blue-900"
+          style={{
+            width: QUESTION_TARGET_SIZE,
+            height: QUESTION_TARGET_SIZE,
+          }}
+        ></div>
+        <div className="bg-foreground text-background rounded-[8px] shadow-2xl p-2 max-w-28 relative -translate-x-1/4">
+          <p className="text-[10px] text-center">
+            {limitStrLen(question.prompt, 34)}
+          </p>
+        </div>
+      </DialogTrigger>
       <DialogContent className="bg-white p-4 rounded shadow-lg">
         <DialogTitle className="mb-4 font-bold">Question</DialogTitle>
         <div className="grid gap-4">
@@ -160,7 +231,7 @@ function QuestionTarget({
               defaultValue={question.answer as string}
             />
           </div>
-          <button
+          <DialogClose
             className="bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600 cursor-pointer"
             onClick={() => {
               updateQuestion(question.id, {
@@ -172,14 +243,14 @@ function QuestionTarget({
             }}
           >
             Save
-          </button>
+          </DialogClose>
         </div>
       </DialogContent>
     </Dialog>
   );
 }
 
-export default function Builder({
+export default function Editor({
   questions,
   setQuestions,
   bgImgUrl,
@@ -191,31 +262,49 @@ export default function Builder({
   isQuestionsPanelOpen: boolean;
 }) {
   const canvasRef = useRef<HTMLDivElement>(null);
+  const [highlightedQuestionId, setHighlightedQuestionId] = useState<
+    string | null
+  >(null);
+  const newQuestionRef = useRef<Question | null>(null);
 
   function deleteQuestion(id: string) {
     setQuestions(questions.filter((q) => q.id !== id));
   }
 
-  function updateQuestion(id: string, updated: Partial<Question>) {
-    setQuestions(
-      questions.map((q) => (q.id === id ? { ...q, ...updated } : q)),
+  function safeUpdateQuestion(id: string, updated: Partial<Question>): boolean {
+    // Prevent empty IDs
+    if (updated.id && updated.id === "") {
+      return false;
+    }
+
+    const newQs = questions.map((q) =>
+      q.id === id ? { ...q, ...updated } : q,
     );
+
+    // Ensure no duplicate IDs
+    const ids = new Set(newQs.map((q) => q.id));
+    if (ids.size !== newQs.length) return false;
+
+    setQuestions(newQs);
+    return true;
   }
-  function handleClick(
+
+  function handleCanvasClick(
     event: ReactMouseEvent<HTMLDivElement, MouseEvent>,
   ): void {
     if (event.target !== canvasRef.current || event.ctrlKey) return;
 
-    setQuestions(
-      questions.concat({
-        ...defaultQuestion,
-        id: crypto.randomUUID(),
-        position: {
-          centerX: event.nativeEvent.offsetX,
-          centerY: event.nativeEvent.offsetY,
-        },
-      }),
-    );
+    const newQuestion = {
+      ...defaultQuestion,
+      id: crypto.randomUUID(),
+      position: {
+        centerX: event.nativeEvent.offsetX,
+        centerY: event.nativeEvent.offsetY,
+      },
+    };
+    setQuestions(questions.concat(newQuestion));
+
+    newQuestionRef.current = newQuestion;
   }
   return (
     <div className="flex justify-center gap-8">
@@ -233,15 +322,17 @@ export default function Builder({
         <div
           id="canvas"
           ref={canvasRef}
-          className="absolute top-0 w-full bottom-0 opacity-50 overflow-visible"
-          onClick={handleClick}
+          className="absolute top-0 w-full bottom-0 opacity-100 overflow-visible"
+          onClick={handleCanvasClick}
         >
           {questions.map((q) => (
-            <QuestionTarget
+            <QuestionSprite
               key={q.id}
               question={q}
               deleteQuestion={deleteQuestion}
-              updateQuestion={updateQuestion}
+              updateQuestion={safeUpdateQuestion}
+              isHighlighted={highlightedQuestionId === q.id}
+              defaultOpen={newQuestionRef.current?.id === q.id}
             />
           ))}
         </div>
@@ -249,6 +340,8 @@ export default function Builder({
       <QuestionsPanel
         questions={questions}
         className={cn(isQuestionsPanelOpen ? "block" : "hidden", "w-1/4")}
+        highlightedQuestionId={highlightedQuestionId}
+        setHighlightedQuestionId={setHighlightedQuestionId}
       />
     </div>
   );

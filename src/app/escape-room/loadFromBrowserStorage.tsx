@@ -40,15 +40,16 @@ export default function useAttemptRestore() {
         });
       }
       setHasAttemptedRestore(true);
-    } else {
-      localStorage.setItem("escapeRoomQuestions", JSON.stringify(questions));
-      if (bgImgUrl) {
-        async function updateImageInStorage(url: string) {
-          const response = await fetch(url);
-          saveImageToIndexedDB(await response.blob());
-        }
-        updateImageInStorage(bgImgUrl);
+      return;
+    }
+
+    localStorage.setItem("escapeRoomQuestions", JSON.stringify(questions));
+    if (bgImgUrl) {
+      async function updateImageInStorage(url: string) {
+        const response = await fetch(url);
+        saveImageToIndexedDB(await response.blob());
       }
+      updateImageInStorage(bgImgUrl);
     }
   }, [questions, bgImgUrl, hasAttemptedRestore]);
 
