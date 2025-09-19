@@ -4,6 +4,12 @@ import Editor from "./Editor";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faTrash } from "@fortawesome/free-solid-svg-icons";
 import useAttemptRestore from "./loadFromBrowserStorage";
+import {
+  Dialog,
+  DialogContent,
+  DialogTitle,
+  DialogTrigger,
+} from "../components/shadcn/dialog";
 
 /* TODO:
 1. Undo & redo.
@@ -12,6 +18,59 @@ import useAttemptRestore from "./loadFromBrowserStorage";
 4. Render
 5. Persistence
 */
+
+function InstructionsDialog() {
+  return (
+    <Dialog>
+      <DialogTrigger asChild>
+        <button
+          className="flex items-center gap-1 px-3 py-1.5 bg-[var(--color-red-latrobe)] text-white rounded hover:cursor-pointer hover:opacity-80"
+          title="Find-question Panel"
+        >
+          Instructions
+        </button>
+      </DialogTrigger>
+      <DialogContent>
+        <DialogTitle>Instructions</DialogTitle>
+        <p>First upload an image</p>
+        <p>Add questions by clicking on the image</p>
+        <p>Each question can be edited by clicking on it</p>
+        <p>Questions can be moved around by dragging it</p>
+        <p>To remove a question, ctrl + click on the question</p>
+        <p>
+          When you have many questions, you may find it hard to locate where it
+          is on the canvas. In this case, you can use the question list panel to
+          quickly to select your question to highlight its position on the
+          canvas
+        </p>
+      </DialogContent>
+    </Dialog>
+  );
+}
+
+function UseDefaultImgButton({
+  setBgImgUrl,
+  handleDeleteImage,
+}: {
+  setBgImgUrl: (url: string) => void;
+  handleDeleteImage: () => void;
+}) {
+  return (
+    <button
+      type="button"
+      onClick={async () => {
+        handleDeleteImage();
+        const img = await fetch("/escape-room-bg.jpg");
+        const imgBlob = await img.blob();
+        setBgImgUrl(URL.createObjectURL(imgBlob));
+      }}
+      className="flex items-center gap-1 px-3 py-1.5 bg-[var(--color-red-latrobe)] text-white rounded hover:cursor-pointer hover:opacity-80"
+      title="Find-question Panel"
+    >
+      Use Default Image
+    </button>
+  );
+}
 
 export default function EscapeRoomPage() {
   const [isQuestionsPanelOpen, setIsQuestionsPanelOpen] = useState(false);
@@ -48,11 +107,16 @@ export default function EscapeRoomPage() {
             onChange={handleFileChange}
             className="border px-2 py-1 rounded"
           />
+          <InstructionsDialog />
+          <UseDefaultImgButton
+            setBgImgUrl={setBgImgUrl}
+            handleDeleteImage={handleDeleteImage}
+          />
         </form>
       )}
       {bgImgUrl && (
         <div className="flex flex-col items-center">
-          <div className="w-full flex justify-center items-center mb-2 gap-8">
+          <div className="w-full flex justify-center items-center mb-2 gap-2 text-sm">
             <form>
               <label>Time</label>
               <input
@@ -79,6 +143,11 @@ export default function EscapeRoomPage() {
             >
               Find-Question Panel
             </button>
+            <UseDefaultImgButton
+              setBgImgUrl={setBgImgUrl}
+              handleDeleteImage={handleDeleteImage}
+            />
+            <InstructionsDialog />
           </div>
           <Editor
             bgImgUrl={bgImgUrl}
