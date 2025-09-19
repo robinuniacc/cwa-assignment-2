@@ -25,7 +25,7 @@ const defaultQuestion: Omit<Question, "position" | "id"> = {
 };
 
 const HIGHLIGHTED_QUESTION_ANIMATION_MS = 2000;
-const QUESTION_TARGET_SIZE = 60;
+const QUESTION_TARGET_SIZE = 32;
 
 function limitStrLen(str: string, n: number) {
   return str.length > n ? str.slice(0, n - 1) + "…" : str;
@@ -177,7 +177,7 @@ function QuestionSprite({
       <DialogTrigger
         ref={ref}
         className={cn(
-          "absolute cursor-pointer",
+          "absolute cursor-pointer flex items-center",
           isAnimating ? "animate-bounce animation-duration-[300ms]" : "",
         )}
         style={{
@@ -204,13 +204,13 @@ function QuestionSprite({
         tabIndex={0}
       >
         <div
-          className="min-w-8 min-h-8 rounded-4xl bg-blue-900"
+          className="rounded-4xl bg-blue-900"
           style={{
             width: QUESTION_TARGET_SIZE,
             height: QUESTION_TARGET_SIZE,
           }}
         ></div>
-        <div className="bg-foreground text-background rounded-[8px] shadow-2xl p-2 max-w-28 relative -translate-x-1/4">
+        <div className="bg-foreground text-background rounded-[8px] shadow-2xl p-2 max-w-28">
           <p className="text-[10px] text-center">
             {limitStrLen(question.prompt, 34)}
           </p>
