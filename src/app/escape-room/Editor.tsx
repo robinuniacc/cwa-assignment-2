@@ -17,6 +17,7 @@ import {
 import Image from "next/image";
 import { Question } from "./types";
 import { cn } from "@/lib/utils";
+import { useResizeDetector } from "react-resize-detector";
 
 const defaultQuestion: Omit<Question, "position" | "id"> = {
   type: "short-answer",
@@ -25,7 +26,7 @@ const defaultQuestion: Omit<Question, "position" | "id"> = {
 };
 
 const HIGHLIGHTED_QUESTION_ANIMATION_MS = 2000;
-const QUESTION_TARGET_SIZE = 60;
+const QUESTION_TARGET_SIZE = 32;
 
 function limitStrLen(str: string, n: number) {
   return str.length > n ? str.slice(0, n - 1) + "…" : str;
@@ -106,10 +107,24 @@ function QuestionSprite({
   defaultOpen?: boolean;
 }) {
   const ref = useRef<HTMLButtonElement>(null);
+  const { width: tooltipWidth, ref: tooltipRef } = useResizeDetector();
   const [isMouseDown, setIsMouseDown] = useState(false);
   const [stopNextClick, setStopNextClick] = useState(false);
   const positionRef = useRef(question.position);
   const [isAnimating, setIsAnimating] = useState(false);
+
+  useEffect(() => {
+    if (!tooltipRef.current) {
+      return;
+    }
+
+    const widthAndPadding =
+      tooltipRef.current!.offsetWidth +
+      tooltipRef.current!.style.paddingLeft +
+      tooltipRef.current!.style.paddingRight;
+    tooltipRef.current!.style.left =
+      QUESTION_TARGET_SIZE / 2 - widthAndPadding / 2 + "px";
+  }, [tooltipWidth, tooltipRef]);
 
   useEffect(() => {
     if (isHighlighted) {
@@ -167,6 +182,7 @@ function QuestionSprite({
     if (!isMouseDown) return;
 
     window.addEventListener("mousemove", onWindowMouseMoveCallback);
+
     return () => {
       window.removeEventListener("mousemove", onWindowMouseMoveCallback);
     };
@@ -204,16 +220,17 @@ function QuestionSprite({
         tabIndex={0}
       >
         <div
-          className="min-w-8 min-h-8 rounded-4xl bg-blue-900"
+          className="rounded-4xl bg-blue-900"
           style={{
             width: QUESTION_TARGET_SIZE,
             height: QUESTION_TARGET_SIZE,
           }}
         ></div>
-        <div className="bg-foreground text-background rounded-[8px] shadow-2xl p-2 max-w-28 relative -translate-x-1/4">
-          <p className="text-[10px] text-center">
-            {limitStrLen(question.prompt, 34)}
-          </p>
+        <div
+          ref={tooltipRef}
+          className="bg-foreground text-background w-fit rounded-[8px] shadow-2xl p-2 max-w-28 text-[10px] text-center relative"
+        >
+          {limitStrLen(question.prompt, 34)}
         </div>
       </DialogTrigger>
       <DialogContent className="bg-white p-4 rounded shadow-lg">
