@@ -1,5 +1,7 @@
+"use client";
+
 import { FillInTheBlanksQuestion } from "../typings";
-import { useState, useEffect, useContext } from "react";
+import { useState, useEffect, useContext, useRef } from "react";
 import { EditorContext } from "../workSpaceContext";
 
 export function useDebounce<T>(value: T, delay: number): T {
@@ -24,12 +26,28 @@ function Answer({
   answer: AnswerWithId;
   onAnsChanged: (ansId: AnswerWithId["id"], newAns: string) => void;
 }) {
+  const ref = useRef<HTMLTextAreaElement>(null);
+  function resize(e: HTMLTextAreaElement) {
+    // Auto-resize textarea
+    e.style.height = "";
+    e.style.height = e.scrollHeight + "px";
+  }
+  useEffect(() => {
+    if (!ref.current) return;
+    resize(ref.current);
+  }, []);
+
   return (
     <>
-      <input
-        className="w-full text-left py-2 px-4"
+      <textarea
+        ref={ref}
         value={answer.answer}
-        onChange={(e) => onAnsChanged(answer.id, e.target.value)}
+        rows={1}
+        className="w-full resize-none h-auto"
+        onChange={(e) => {
+          resize(e.currentTarget);
+          onAnsChanged(answer.id, e.target.value);
+        }}
       />
     </>
   );
@@ -84,11 +102,12 @@ export default function FITBQAnsEditor({
   }
 
   return (
-    <div className="overflow-y-auto max-h-44">
+    <div>
       Actual Answer:
       <ul>
-        {answers.map((answer) => (
-          <li key={answer.id}>
+        {answers.map((answer, idx) => (
+          <li key={answer.id} className="flex gap-2">
+            <span>{idx + 1}. </span>
             <Answer answer={answer} onAnsChanged={handleAnswerChanged} />
           </li>
         ))}
