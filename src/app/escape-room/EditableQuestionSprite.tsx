@@ -7,18 +7,15 @@ import {
   SelectValue,
 } from "../components/shadcn/select";
 import BaseSprite from "./EmptyQuestionSprite";
-import {
-  MultipleChoiceQuestion,
-  Prompt,
-  Question,
-  ShortAnswerQuestion,
-  TrueFalseQuestion,
-} from "./typings";
+import { Prompt, Question } from "./typings";
 import { EditorContext } from "./workSpaceContext";
 import PromptsEditor, {
   computePromptId,
   PromptWithId,
 } from "./prompt-editor/PromptsEditor";
+import TrueFalseAnsEditor from "./answer-editor/TrueFalseAnsEditor";
+import ShortAnswerQEditor from "./answer-editor/ShortAnswerQAnsEditor";
+import MCQAnsEditor from "./answer-editor/MCQAnsEditor";
 
 const DEFAULT_QUESTIONS: {
   [T in Question["type"]]: Omit<
@@ -55,22 +52,43 @@ const DEFAULT_QUESTIONS: {
   },
 };
 
-function renderAnswerEditor(question: Question) {
+function renderAnswerEditor(
+  question: Question,
+  {
+    registerOnClose,
+    deregisterOnClose,
+  }: {
+    registerOnClose: (fn: () => void) => void;
+    deregisterOnClose: (fn: () => void) => void;
+  },
+) {
   switch (question.type) {
     case "short-answer":
-      return <p>{(question as ShortAnswerQuestion).answer}</p>;
+      return (
+        <ShortAnswerQEditor
+          question={question}
+          registerOnClose={registerOnClose}
+          deregisterOnClose={deregisterOnClose}
+        />
+      );
     case "multiple-choice":
       return (
-        <p>
-          {(question as MultipleChoiceQuestion).choices
-            .map((choice) => choice.text)
-            .join(", ")}
-        </p>
+        <MCQAnsEditor
+          question={question}
+          registerOnClose={registerOnClose}
+          deregisterOnClose={deregisterOnClose}
+        />
       );
     case "true-false":
-      return <p>{(question as TrueFalseQuestion).answer ? "True" : "False"}</p>;
+      return (
+        <TrueFalseAnsEditor
+          question={question}
+          registerOnClose={registerOnClose}
+          deregisterOnClose={deregisterOnClose}
+        />
+      );
     case "fill-in-the-blanks":
-      return <p>Fill In The Blanks Placeholder</p>;
+      return <div>Fill In The Blanks Editor</div>;
     default:
       return null;
   }
@@ -149,7 +167,14 @@ export default function EditableQuestionSprite({
         </SelectContent>
       </Select>
       <PromptsEditor prompt={localPrompt} setPrompt={setLocalPrompt} />
-      {renderAnswerEditor(question)}
+      {renderAnswerEditor(question, {
+        registerOnClose: (f) => onCloseListeners.current.push(f),
+        deregisterOnClose: (target: () => void) => {
+          onCloseListeners.current = onCloseListeners.current.filter(
+            (f) => f !== target,
+          );
+        },
+      })}
     </BaseSprite>
   );
 }
