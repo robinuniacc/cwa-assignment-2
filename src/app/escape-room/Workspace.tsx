@@ -66,18 +66,81 @@ export default function Editor({
   questions,
   setQuestions,
   bgImgUrl,
+  imgSize,
+  setImgSize,
   isQuestionsPanelOpen,
 }: {
   questions: Question[];
   setQuestions: React.Dispatch<React.SetStateAction<Question[]>>;
   bgImgUrl: string;
   isQuestionsPanelOpen: boolean;
+  imgSize: { width: number; height: number };
+  setImgSize: React.Dispatch<
+    React.SetStateAction<{ width: number; height: number }>
+  >;
 }) {
   const canvasRef = useRef<HTMLDivElement>(null);
   const [highlightedQuestionId, setHighlightedQuestionId] = useState<
     string | null
   >(null);
   const newQuestionRef = useRef<Question | null>(null);
+
+  const resizingRef = useRef(false);
+  const lastPosRef = useRef<{ x: number; y: number } | null>(null);
+  const initialResizeRef = useRef<{
+    startX: number;
+    startY: number;
+    startWidth: number;
+    startHeight: number;
+  } | null>(null);
+
+  function handleResizeMouseDown(
+    e: ReactMouseEvent<HTMLDivElement, MouseEvent>,
+  ) {
+    e.stopPropagation();
+    resizingRef.current = true;
+    lastPosRef.current = { x: e.clientX, y: e.clientY };
+    initialResizeRef.current = {
+      startX: e.clientX,
+      startY: e.clientY,
+      startWidth: imgSize.width,
+      startHeight: imgSize.height,
+    };
+    window.addEventListener("mousemove", handleResizeMouseMove);
+    window.addEventListener("mouseup", handleResizeMouseUp);
+  }
+  function handleResizeMouseMove(e: MouseEvent) {
+    if (!resizingRef.current || !initialResizeRef.current) return;
+    const { startX, startY, startWidth, startHeight } =
+      initialResizeRef.current;
+    const newWidth = Math.max(100, startWidth + (e.clientX - startX));
+    const newHeight = Math.max(100, startHeight + (e.clientY - startY));
+
+    // Update question positions proportionally.
+    // If a question was on a chest, when the image is resized, it should still be on the chest.
+    setQuestions(
+      questions.map((q) => {
+        return {
+          ...q,
+          position: {
+            centerX: q.position.centerX * (newWidth / imgSize.width),
+            centerY: q.position.centerY * (newHeight / imgSize.height),
+          },
+        };
+      }),
+    );
+    setImgSize({
+      width: newWidth,
+      height: newHeight,
+    });
+  }
+  function handleResizeMouseUp() {
+    resizingRef.current = false;
+    lastPosRef.current = null;
+    initialResizeRef.current = null;
+    window.removeEventListener("mousemove", handleResizeMouseMove);
+    window.removeEventListener("mouseup", handleResizeMouseUp);
+  }
 
   function deleteQuestion(id: string) {
     setQuestions(questions.filter((q) => q.id !== id));
@@ -128,20 +191,33 @@ export default function Editor({
       <div className="flex justify-center gap-8">
         <div
           id="canvas-container"
-          className={cn("relative w-fit max-w-3/4 h-fit")}
+          className={cn("relative")}
+          style={{ width: imgSize.width, height: imgSize.height }}
         >
           <Image
             src={bgImgUrl}
             alt="Preview"
-            width={200}
-            height={200}
-            className="rounded shadow w-auto h-auto"
+            width={imgSize.width}
+            height={imgSize.height}
+            className="rounded shadow w-full h-full select-none pointer-events-none"
+            draggable={false}
+            style={{
+              width: imgSize.width,
+              height: imgSize.height,
+            }}
           />
+          {/* --- Resize handle --- */}
+          <div
+            onMouseDown={handleResizeMouseDown}
+            className="absolute -right-2.5 -bottom-2.5 w-2.5 h-2.5 cursor-nwse-resize z-10 select-none"
+            title="Resize"
+          ></div>
           <div
             id="canvas"
             ref={canvasRef}
             className="absolute top-0 w-full bottom-0 opacity-100 overflow-visible"
             onClick={handleCanvasClick}
+            style={{ height: imgSize.height, width: imgSize.width }}
           >
             {questions.map((q) => (
               <EditableQuestionSprite

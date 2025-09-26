@@ -49,10 +49,10 @@ function InstructionsDialog() {
 }
 
 function UseDefaultImgButton({
-  setBgImgUrl,
+  handleBgImgChange,
   handleDeleteImage,
 }: {
-  setBgImgUrl: (url: string) => void;
+  handleBgImgChange: (url: string) => void;
   handleDeleteImage: () => void;
 }) {
   return (
@@ -62,7 +62,7 @@ function UseDefaultImgButton({
         handleDeleteImage();
         const img = await fetch("/escape-room-bg.jpg");
         const imgBlob = await img.blob();
-        setBgImgUrl(URL.createObjectURL(imgBlob));
+        handleBgImgChange(URL.createObjectURL(imgBlob));
       }}
       className="flex items-center gap-1 px-3 py-1.5 bg-[var(--color-red-latrobe)] text-white rounded hover:cursor-pointer hover:opacity-80"
       title="Find-question Panel"
@@ -70,6 +70,11 @@ function UseDefaultImgButton({
       Use Default Image
     </button>
   );
+}
+
+async function computeInstrinsicImgSize(blob: Blob) {
+  const bitmap = await createImageBitmap(blob);
+  return { width: bitmap.width, height: bitmap.height };
 }
 
 export default function EscapeRoomPage() {
@@ -80,12 +85,17 @@ export default function EscapeRoomPage() {
     setQuestions,
     setBgImgUrl,
     hasAttemptedRestore,
+    imgSize,
+    setImgSize,
   } = useAttemptRestore();
 
-  function handleFileChange(e: React.ChangeEvent<HTMLInputElement>) {
-    const file = e.target.files?.[0];
-    if (file) {
-      setBgImgUrl(URL.createObjectURL(file));
+  async function handleBgImgChange(newImgUrl: string) {
+    const imgBlob = await fetch(newImgUrl).then((r) => r.blob());
+    if (imgBlob) {
+      setBgImgUrl(URL.createObjectURL(imgBlob));
+      computeInstrinsicImgSize(imgBlob).then((size) => {
+        setImgSize(size);
+      });
     } else {
       setBgImgUrl(null);
     }
@@ -104,12 +114,15 @@ export default function EscapeRoomPage() {
           <input
             type="file"
             accept="image/*"
-            onChange={handleFileChange}
+            onChange={(e) =>
+              e.target.files &&
+              handleBgImgChange(URL.createObjectURL(e.target.files[0]))
+            }
             className="border px-2 py-1 rounded"
           />
           <InstructionsDialog />
           <UseDefaultImgButton
-            setBgImgUrl={setBgImgUrl}
+            handleBgImgChange={handleBgImgChange}
             handleDeleteImage={handleDeleteImage}
           />
         </form>
@@ -144,7 +157,7 @@ export default function EscapeRoomPage() {
               Find-Question Panel
             </button>
             <UseDefaultImgButton
-              setBgImgUrl={setBgImgUrl}
+              handleBgImgChange={handleBgImgChange}
               handleDeleteImage={handleDeleteImage}
             />
             <InstructionsDialog />
@@ -154,6 +167,8 @@ export default function EscapeRoomPage() {
             questions={questions}
             setQuestions={setQuestions}
             isQuestionsPanelOpen={isQuestionsPanelOpen}
+            imgSize={imgSize}
+            setImgSize={setImgSize}
           />
         </div>
       )}
