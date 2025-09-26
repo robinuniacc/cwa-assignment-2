@@ -16,6 +16,7 @@ import PromptsEditor, {
 import TrueFalseAnsEditor from "./answer-editor/TrueFalseAnsEditor";
 import ShortAnswerQEditor from "./answer-editor/ShortAnswerQAnsEditor";
 import MCQAnsEditor from "./answer-editor/MCQAnsEditor";
+import FITBQAnsEditor from "./answer-editor/FITBQAnsEditor";
 
 const DEFAULT_QUESTIONS: {
   [T in Question["type"]]: Omit<
@@ -88,7 +89,13 @@ function renderAnswerEditor(
         />
       );
     case "fill-in-the-blanks":
-      return <div>Fill In The Blanks Editor</div>;
+      return (
+        <FITBQAnsEditor
+          question={question}
+          registerOnClose={registerOnClose}
+          deregisterOnClose={deregisterOnClose}
+        />
+      );
     default:
       return null;
   }
@@ -112,6 +119,25 @@ export default function EditableQuestionSprite({
   const [localPrompt, setLocalPrompt] = useState<PromptWithId[]>(() =>
     question.prompt.map((p) => ({ ...p, promptId: computePromptId(p) })),
   );
+
+  useEffect(() => {
+    if (question.type !== "fill-in-the-blanks") return;
+    const blanksCt = computeBlanksCt(combineTextBasedPrompts(localPrompt));
+
+    const currAns = question.answer;
+    if (currAns.length === blanksCt) return;
+
+    const newAns = [...currAns];
+    console.log(currAns.length, newAns.length, blanksCt);
+    if (blanksCt < currAns.length) newAns.length = blanksCt;
+    else {
+      while (newAns.length < blanksCt) newAns.push("a");
+    }
+
+    console.log("update ans,", newAns);
+    updateQuestion(question.id, { ...question, answer: newAns });
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [localPrompt, question.id, question.type]);
 
   useEffect(() => {
     setLocalPrompt(
@@ -177,6 +203,19 @@ export default function EditableQuestionSprite({
       })}
     </BaseSprite>
   );
+}
+
+function combineTextBasedPrompts(prompt: PromptWithId[]): string {
+  return prompt
+    .filter((p) => p.type === "text" || p.type === "code")
+    .map((p) => p.prompt)
+    .join("");
+}
+
+function computeBlanksCt(prompt: string): number {
+  const regex = /%%%/g;
+  const matches = prompt.match(regex);
+  return matches ? matches.length : 0;
 }
 
 export { DEFAULT_QUESTIONS };
