@@ -62,7 +62,7 @@ function QuestionsPanel({
   );
 }
 
-export default function Editor({
+export default function Workspace({
   questions,
   setQuestions,
   bgImgUrl,
