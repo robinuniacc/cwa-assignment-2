@@ -27,8 +27,9 @@ function computeQuestionSpriteCSSTop(y: number) {
   return y - QUESTION_SPRITE_SIZE / 2;
 }
 
-function computeQuestionSpriteCSSLeft(x: number) {
-  return x - QUESTION_SPRITE_SIZE / 2;
+function computeQuestionSpriteCSSLeft(x: number, width?: number) {
+  if (width === undefined) return 0;
+  return x - width / 2;
 }
 
 function useAnimationStatus(play: boolean) {
@@ -50,23 +51,6 @@ function useAnimationStatus(play: boolean) {
   return [isAnimating, setIsAnimating];
 }
 
-function useRefResponsiveTooltip(targetSize: number) {
-  const { width: tooltipWidth, ref: tooltipRef } = useResizeDetector();
-  useEffect(() => {
-    if (!tooltipRef.current) {
-      return;
-    }
-
-    const widthAndPadding =
-      tooltipRef.current!.offsetWidth +
-      tooltipRef.current!.style.paddingLeft +
-      tooltipRef.current!.style.paddingRight;
-    tooltipRef.current!.style.left =
-      targetSize / 2 - widthAndPadding / 2 + "px";
-  }, [tooltipWidth, tooltipRef, targetSize]);
-  return tooltipRef;
-}
-
 export default function QuestionSprite({
   children,
   question,
@@ -81,12 +65,20 @@ export default function QuestionSprite({
   onClose: () => void;
 }) {
   const { updateQuestion, deleteQuestion } = useContext(EditorContext);
-  const ref = useRef<HTMLButtonElement>(null);
-  const tooltipRef = useRefResponsiveTooltip(QUESTION_SPRITE_SIZE);
+  const { ref, width } = useResizeDetector<HTMLButtonElement>();
   const [suppressClickHandlers, setSuppressClickHandlers] = useState(false);
   const positionRef = useRef(question.position);
   const [isAnimating] = useAnimationStatus(isHighlighted);
   const [isMouseDown, setIsMouseDown] = useState(false);
+
+  useEffect(() => {
+    if (ref.current == null) return;
+    ref.current!.style.left =
+      computeQuestionSpriteCSSLeft(question.position.centerX, width) + "px";
+    ref.current!.style.top =
+      computeQuestionSpriteCSSTop(question.position.centerY) + "px";
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [width, question.position.centerX, question.position.centerY]);
 
   const onWindowMouseMoveCallback = useCallback(
     (e: MouseEvent) => {
@@ -102,9 +94,10 @@ export default function QuestionSprite({
       ref.current!.style.top =
         computeQuestionSpriteCSSTop(positionRef.current.centerY) + "px";
       ref.current!.style.left =
-        computeQuestionSpriteCSSLeft(positionRef.current.centerX) + "px";
+        computeQuestionSpriteCSSLeft(positionRef.current.centerX, width) + "px";
     },
-    [isMouseDown],
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    [isMouseDown, width],
   );
 
   useEffect(() => {
@@ -148,12 +141,10 @@ export default function QuestionSprite({
       <DialogTrigger
         ref={ref}
         className={cn(
-          "absolute cursor-pointer",
+          "absolute cursor-pointer overflow-visible flex flex-col items-center",
           isAnimating ? "animate-bounce animation-duration-[300ms]" : "",
         )}
         style={{
-          top: computeQuestionSpriteCSSTop(question.position.centerY),
-          left: computeQuestionSpriteCSSLeft(question.position.centerX),
           zIndex: isMouseDown ? 50 : undefined,
           opacity: isMouseDown ? 0.7 : 1,
         }}
@@ -181,10 +172,7 @@ export default function QuestionSprite({
             height: QUESTION_SPRITE_SIZE,
           }}
         ></div>
-        <div
-          ref={tooltipRef}
-          className="bg-foreground text-background w-fit rounded-[8px] shadow-2xl p-2 max-w-28 text-[10px] text-center relative"
-        >
+        <div className="bg-foreground text-background w-fit rounded-[8px] shadow-2xl p-2 max-w-28 text-[10px] text-center">
           {limitStrLen(question.prompt.map((p) => p.prompt).join(" "), 34)}
         </div>
       </DialogTrigger>
