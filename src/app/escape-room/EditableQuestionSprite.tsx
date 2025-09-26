@@ -15,6 +15,10 @@ import {
   TrueFalseQuestion,
 } from "./typings";
 import { EditorContext } from "./workSpaceContext";
+import PromptsEditor, {
+  computePromptId,
+  PromptWithId,
+} from "./prompt-editor/PromptsEditor";
 
 const DEFAULT_QUESTIONS: {
   [T in Question["type"]]: Omit<
@@ -70,12 +74,6 @@ function renderAnswerEditor(question: Question) {
     default:
       return null;
   }
-}
-
-export type PromptWithId = Prompt & { promptId: string };
-
-export function computePromptId(prompt: Prompt): string {
-  return `${prompt.prompt}-${crypto.randomUUID()}`;
 }
 
 export default function EditableQuestionSprite({
@@ -150,7 +148,7 @@ export default function EditableQuestionSprite({
           <SelectItem value="fill-in-the-blanks">Fill In The Blanks</SelectItem>
         </SelectContent>
       </Select>
-      <div>{question.prompt.map((p) => p.prompt).join(", ")}</div>
+      <PromptsEditor prompt={localPrompt} setPrompt={setLocalPrompt} />
       {renderAnswerEditor(question)}
     </BaseSprite>
   );
