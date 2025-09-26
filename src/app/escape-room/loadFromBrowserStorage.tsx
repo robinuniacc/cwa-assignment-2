@@ -1,6 +1,6 @@
 import { openDB } from "idb";
 import { useState, useEffect } from "react";
-import { Question } from "./types";
+import { Question } from "./typings";
 
 async function saveImageToIndexedDB(image: Blob) {
   const db = await openDB("escapeRoomDB", 1, {

@@ -1,6 +1,6 @@
 "use client";
 import { useState } from "react";
-import Editor from "./Editor";
+import Workspace from "./Workspace";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faTrash } from "@fortawesome/free-solid-svg-icons";
 import useAttemptRestore from "./loadFromBrowserStorage";
@@ -149,7 +149,7 @@ export default function EscapeRoomPage() {
             />
             <InstructionsDialog />
           </div>
-          <Editor
+          <Workspace
             bgImgUrl={bgImgUrl}
             questions={questions}
             setQuestions={setQuestions}
