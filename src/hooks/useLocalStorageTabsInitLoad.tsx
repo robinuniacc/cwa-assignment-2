@@ -34,5 +34,6 @@ export default function useLocalStorageTabsInitLoad({
     } catch {
       // Safe fallback on any parsing/storage error
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 }
