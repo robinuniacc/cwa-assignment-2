@@ -19,7 +19,7 @@ export default function CodePromptEditor({ prompt }: { prompt: PromptWithId }) {
     if (textAreaRef.current) {
       resizePrompt(textAreaRef.current);
     }
-  }, []);
+  }, [prompt]);
 
   return (
     <BaseEditor className="flex gap-2 items-center" prompt={prompt}>
@@ -30,11 +30,10 @@ export default function CodePromptEditor({ prompt }: { prompt: PromptWithId }) {
         <code>
           <textarea
             ref={textAreaRef}
-            defaultValue={prompt.prompt}
+            value={prompt.prompt}
             rows={1}
             className="w-full resize-none h-auto"
             onChange={(e) => {
-              resizePrompt(e.currentTarget);
               onChange(prompt.promptId, e.target.value);
             }}
           />
