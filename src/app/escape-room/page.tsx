@@ -106,6 +106,29 @@ export default function EscapeRoomPage() {
     setBgImgUrl(null);
   }
 
+  async function generateEscapeRoomPreviewUrl() {
+    const bgImgBlob = await fetch(bgImgUrl!, {}).then((r) => r.blob());
+    if (!bgImgBlob) {
+      return new Response("Failed to fetch background image", { status: 400 });
+    }
+    const bgImgBase64 = await bgImgBlob
+      .arrayBuffer()
+      .then((buf) => Buffer.from(buf).toString("base64"));
+
+    const response = await fetch("/escape-room/preview-api", {
+      method: "POST",
+      body: JSON.stringify({
+        questions,
+        bgImgBase64,
+        bgImgMimeType: bgImgBlob.type,
+        bgImgSize: imgSize,
+      }),
+    });
+
+    const html = await response.text();
+    window.open()?.document.writeln(html);
+  }
+
   return (
     <div className="min-h-screen flex justify-center px-5 md:px-8 py-5 md:py-12">
       {!bgImgUrl && hasAttemptedRestore && (
@@ -160,6 +183,14 @@ export default function EscapeRoomPage() {
               handleBgImgChange={handleBgImgChange}
               handleDeleteImage={handleDeleteImage}
             />
+            <button
+              type="button"
+              onClick={() => generateEscapeRoomPreviewUrl()}
+              className="flex items-center gap-1 px-3 py-1.5 bg-[var(--color-red-latrobe)] text-white rounded hover:cursor-pointer hover:opacity-80"
+              title="Preview Escape Room"
+            >
+              Preview
+            </button>
             <InstructionsDialog />
           </div>
           <Workspace

@@ -53,20 +53,36 @@ Since this project seems somewhat exciting, I took on the challenge of making it
 
 # Escape room
 
-This allows you to build an escape room. It generates a javascript code that can be copied/pasted into a file and immediately runs in a browser.
+## Overview
 
-## Architecture
+Whatever is supported in the escape room builder is supported here.
 
-The escape room is organized into **workspaces**. A workspace is a complete app. What that means is if you `npx create-next-app@latest` right now, the workspace file -- along with its dependencies -- can be copied/pasted into that new project with just configuring its props.
+Currently, a prompt is composed of components. Components can be of 3 types -- text, code, or line break.
 
-This make it easy to scale in the future if you want multiple escape rooms or multiple subrooms/stages in the escape room you're building, and you want the user to be able to edit 2 or more of them at the same time -- just add 2 or more workspace components in your page and you're all set. That's not 100% true, because the way some of the things work right now, but it nevertheless is quite easy to scale.
+For FITB questions, the answer to each blank can be either text or code and is rendered accordingly (code is rendered using a different font).
 
-A workspace is consisted of the bg img, the tools, the questions, etc.
+As of now, the dependencies are the Poppins font from Google Fonts, normalize.css, and he.js (HTML Encoder/Decoder) to sanitize HTML. he.js is necessary.
 
-The rendered question bubbles overlaid on the bg image is called a **question sprite**. When clicked, it opens up the editor.
+These dependencies can also be copied/pasted into the code directly.
 
-The editor is comprised of 2 things -- the prompt editor, and the answer editor.
+Event listeners that uses to user-defined JavaScript code has to be attached dynamically, not inline.
 
-The prompt editor is used to design prompts. A prompt may be consisted of many formats; for example, text, code, images, etc. Currently, it supports text, code, and line breaks. More can be added as necessary.
+## Visuals
 
-The answer editor is used to design the answers --- WHOA WHO COULD'VE GUESSED?
+As mentioned earlier, right now it uses normalize.css and he.js.
+
+Question sprites are rendered as circles 32px wide. A sprite by default is rendered aqua; if the user's answer to the question is correct, the sprite is rendered green.
+
+For True-False questions, there is a blank option, which is selected by default. This represents neither true nor false.
+
+Users can click on the "Click to Finish" button that only marks the game finished if all answers are correct.
+
+## Logic
+
+Users click on question sprites to open up the answer modal. Answers are saved when users exit -- by clicking on the submit button, pressing the ESC key on the keyboard, or clicking outside the modal.
+
+A question sprite turns green if the user answers correctly.
+
+If all questions are answered correctly, a modal appears indicating so and the escape room becomes non-interactable, except for scrolling around to view the escape room.
+
+For short answer questions and FITB questions, when the answer is not a single line, the input fields are rendered as textareas. For FITB questions, these textareas always appear on their own line regardless of whether or not there is a newline character preceding it in the prompt.

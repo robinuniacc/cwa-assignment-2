@@ -43,3 +43,5 @@ next-env.d.ts
 # assignment
 ass1-specs.docx
 output-template/**
+
+*.zip
