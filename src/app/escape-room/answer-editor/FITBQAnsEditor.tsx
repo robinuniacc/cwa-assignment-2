@@ -87,7 +87,6 @@ export default function FITBQAnsEditor({
       });
     };
 
-    console.log("dsa");
     registerOnClose(updateAnswers);
     return () => deregisterOnClose(updateAnswers);
     // eslint-disable-next-line react-hooks/exhaustive-deps
