@@ -1,0 +1,93 @@
+generator client {
+    provider = "prisma-client"
+    output   = "./generated"
+}
+
+datasource db {
+    provider = "postgresql"
+    url      = env("ESCAPE_ROOM_DATABASE_URL")
+}
+
+model fill_in_the_blanks_answers {
+    id          String                       @id @default(uuid()) @db.Uuid
+    question_id String                       @db.Uuid
+    answer      String
+    position    Int
+    question    fill_in_the_blanks_questions @relation(fields: [question_id], references: [question_id], onDelete: Cascade)
+
+    @@unique([question_id, position])
+    @@index([question_id], map: "idx_fib_answers_question_id")
+}
+
+model fill_in_the_blanks_questions {
+    question_id String                       @id @db.Uuid
+    answers     fill_in_the_blanks_answers[]
+    question    questions                    @relation(fields: [question_id], references: [id], onDelete: Cascade)
+}
+
+model multiple_choice_choices {
+    id          String                    @id @default(uuid()) @db.Uuid
+    question_id String                    @db.Uuid
+    text        String
+    is_correct  Boolean                   @default(false)
+    question    multiple_choice_questions @relation(fields: [question_id], references: [question_id], onDelete: Cascade)
+
+    @@index([question_id], map: "idx_mc_choices_question_id")
+}
+
+model multiple_choice_questions {
+    question_id String                    @id @db.Uuid
+    choices     multiple_choice_choices[]
+    question    questions                 @relation(fields: [question_id], references: [id], onDelete: Cascade)
+}
+
+model prompts {
+    id          String      @id @default(uuid()) @db.Uuid
+    question_id String      @db.Uuid
+    type        prompt_type
+    prompt      String
+    position    Int
+    question    questions   @relation(fields: [question_id], references: [id], onDelete: Cascade)
+
+    @@unique([question_id, position])
+    @@index([question_id], map: "idx_prompts_question_id")
+}
+
+model questions {
+    id                           String                        @id @db.Uuid
+    type                         question_type
+    center_x                     Int
+    center_y                     Int
+    fill_in_the_blanks_questions fill_in_the_blanks_questions?
+    multiple_choice_questions    multiple_choice_questions?
+    prompts                      prompts[]
+    short_answer_questions       short_answer_questions?
+    true_false_questions         true_false_questions?
+
+    @@index([type], map: "idx_questions_type")
+}
+
+model short_answer_questions {
+    question_id String    @id @db.Uuid
+    answer      String
+    question    questions @relation(fields: [question_id], references: [id], onDelete: Cascade)
+}
+
+model true_false_questions {
+    question_id String    @id @db.Uuid
+    answer      Boolean
+    question    questions @relation(fields: [question_id], references: [id], onDelete: Cascade)
+}
+
+enum prompt_type {
+    text
+    code
+    newline
+}
+
+enum question_type {
+    short_answer
+    multiple_choice
+    true_false
+    fill_in_the_blanks
+}

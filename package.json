@@ -6,7 +6,7 @@
     "dev": "next dev --turbopack",
     "build": "next build",
     "start": "next start",
-    "lint": "next lint --max-warnings 0",
+    "lint": "eslint --fix --no-warn-ignored --max-warnings 0",
     "prepare": "husky",
     "create-migration-dev": "dotenvx run -f .env.development -- prisma migrate dev --name",
     "rollback-db-dev": "dotenvx run -f .env.development -- prisma migrate reset"
