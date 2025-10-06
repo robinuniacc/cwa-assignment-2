@@ -1,6 +1,6 @@
 import { openDB } from "idb";
-import { useState, useEffect } from "react";
-import { Question } from "./typings";
+import { useState, useEffect, useCallback } from "react";
+import { Question } from "@/app/escape-room/typings";
 
 async function saveImageToIndexedDB(image: Blob) {
   const db = await openDB("escapeRoomDB", 1, {
@@ -28,6 +28,17 @@ export default function useAttemptRestore() {
   const [questions, setQuestions] = useState<Question[]>([]);
   const [hasAttemptedRestore, setHasAttemptedRestore] = useState(false);
   const [imgSize, setImgSize] = useState({ width: 400, height: 400 });
+  const save = useCallback(() => {
+    localStorage.setItem("escapeRoomQuestions", JSON.stringify(questions));
+    localStorage.setItem("bgImgSize", JSON.stringify(imgSize));
+    if (bgImgUrl) {
+      async function updateImageInStorage(url: string) {
+        const response = await fetch(url);
+        saveImageToIndexedDB(await response.blob());
+      }
+      updateImageInStorage(bgImgUrl);
+    }
+  }, [bgImgUrl, imgSize, questions]);
 
   useEffect(() => {
     if (!hasAttemptedRestore) {
@@ -45,24 +56,7 @@ export default function useAttemptRestore() {
       setHasAttemptedRestore(true);
       return;
     }
-
-    localStorage.setItem("escapeRoomQuestions", JSON.stringify(questions));
-    localStorage.setItem("bgImgSize", JSON.stringify(imgSize));
-    if (bgImgUrl) {
-      async function updateImageInStorage(url: string) {
-        const response = await fetch(url);
-        saveImageToIndexedDB(await response.blob());
-      }
-      updateImageInStorage(bgImgUrl);
-    }
-  }, [
-    questions,
-    bgImgUrl,
-    hasAttemptedRestore,
-    imgSize.width,
-    imgSize.height,
-    imgSize,
-  ]);
+  }, [hasAttemptedRestore]);
 
   return {
     bgImgUrl,
@@ -72,5 +66,6 @@ export default function useAttemptRestore() {
     questions,
     setQuestions,
     hasAttemptedRestore,
+    save,
   };
 }
