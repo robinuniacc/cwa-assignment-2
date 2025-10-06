@@ -3,14 +3,13 @@ import { useState } from "react";
 import Workspace from "./Workspace";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faTrash } from "@fortawesome/free-solid-svg-icons";
-import useAttemptRestore from "./loadFromBrowserStorage";
 import {
   Dialog,
   DialogContent,
   DialogTitle,
   DialogTrigger,
 } from "../components/shadcn/dialog";
-import useDbStoreAndS3 from "@/hooks/useDbStoreAndS3";
+import useDbAndS3 from "@/hooks/escape-room/useDbAndS3";
 
 /* TODO:
 1. Undo & redo.
@@ -89,7 +88,7 @@ export default function EscapeRoomPage() {
     imgSize,
     setImgSize,
     save,
-  } = useDbStoreAndS3();
+  } = useDbAndS3();
 
   async function handleBgImgChange(newImgUrl: string) {
     const imgBlob = await fetch(newImgUrl).then((r) => r.blob());

@@ -2,7 +2,7 @@ import { generateTabId, Tab } from "@/lib/tab";
 import { useEffect } from "react";
 import Cookies from "js-cookie";
 
-export default function useLocalStorageTabsInitLoad({
+export default function useLocalStorage({
   setTabs,
   setActiveTabId,
 }: {

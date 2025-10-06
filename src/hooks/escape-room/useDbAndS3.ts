@@ -6,9 +6,12 @@ import {
   useState,
 } from "react";
 import { Question } from "@/app/escape-room/typings";
-import { loadData, saveData as saveUserData } from "../server-actions/mutator";
+import {
+  loadData,
+  saveData as saveUserData,
+} from "../../server-actions/escapeRoomExtStoreMutator";
 
-export default function useDbStoreAndS3() {
+export default function useDbAndS3() {
   const [bgImgUrl, setBgImgUrl] = useState<string | null>(null);
   const [questions, setQuestions] = useState<Question[]>([]);
   const [hasAttemptedRestore, setHasAttemptedRestore] = useState(false);

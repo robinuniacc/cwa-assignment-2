@@ -7,7 +7,7 @@ import TabNavigationBar from "@/app/components/TabNavigationBar";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faPlus } from "@fortawesome/free-solid-svg-icons/faPlus";
 import { faTrash } from "@fortawesome/free-solid-svg-icons/faTrash";
-import useLocalStorageTabsInitLoad from "@/hooks/useLocalStorageTabsInitLoad";
+import useLocalStorage from "@/hooks/tabs/useLocalStorage";
 import { setCookie } from "@/lib/web";
 import { generateTabId, Tab } from "@/lib/tab";
 import { generateHTMLFromTabs } from "@/lib/html";
@@ -30,7 +30,7 @@ export default function Home() {
   );
 
   // Load from localStorage once on mount
-  useLocalStorageTabsInitLoad({ setTabs, setActiveTabId });
+  useLocalStorage({ setTabs, setActiveTabId });
 
   // Persist to localStorage whenever tabs or activeId change
   useEffect(() => {
