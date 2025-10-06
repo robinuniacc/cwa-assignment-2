@@ -10,6 +10,7 @@ import {
   DialogTitle,
   DialogTrigger,
 } from "../components/shadcn/dialog";
+import useDbStoreAndS3 from "@/hooks/useDbStoreAndS3";
 
 /* TODO:
 1. Undo & redo.
@@ -87,7 +88,8 @@ export default function EscapeRoomPage() {
     hasAttemptedRestore,
     imgSize,
     setImgSize,
-  } = useAttemptRestore();
+    save,
+  } = useDbStoreAndS3();
 
   async function handleBgImgChange(newImgUrl: string) {
     const imgBlob = await fetch(newImgUrl).then((r) => r.blob());
@@ -190,6 +192,14 @@ export default function EscapeRoomPage() {
               title="Preview Escape Room"
             >
               Preview
+            </button>
+            <button
+              type="button"
+              onClick={() => save()}
+              className="flex items-center gap-1 px-3 py-1.5 bg-[var(--color-red-latrobe)] text-white rounded hover:cursor-pointer hover:opacity-80"
+              title="Save Escape Room"
+            >
+              Save
             </button>
             <InstructionsDialog />
           </div>
