@@ -128,13 +128,11 @@ export default function EditableQuestionSprite({
     if (currAns.length === blanksCt) return;
 
     const newAns = [...currAns];
-    console.log(currAns.length, newAns.length, blanksCt);
     if (blanksCt < currAns.length) newAns.length = blanksCt;
     else {
       while (newAns.length < blanksCt) newAns.push("a");
     }
 
-    console.log("update ans,", newAns);
     updateQuestion(question.id, { ...question, answer: newAns });
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [localPrompt, question.id, question.type]);
@@ -147,7 +145,6 @@ export default function EditableQuestionSprite({
 
   useEffect(() => {
     const updatePrompt = () => {
-      console.log("update prompt");
       updateQuestion(question.id, {
         prompt: localPrompt.map(
           (p) => ({ type: p.type, prompt: p.prompt }) as Prompt,

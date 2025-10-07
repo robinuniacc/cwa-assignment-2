@@ -11,14 +11,6 @@ import {
 } from "../components/shadcn/dialog";
 import useDbAndS3 from "@/hooks/escape-room/useDbAndS3";
 
-/* TODO:
-1. Undo & redo.
-2. Add/update/delete question
-3. Implement question types
-4. Render
-5. Persistence
-*/
-
 function InstructionsDialog() {
   return (
     <Dialog>
