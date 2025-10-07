@@ -1,4 +1,4 @@
-import { Tab } from "@/lib/tab";
+import { Tab } from "@/server-actions/tab-generator/tab";
 import { useState } from "react";
 
 export default function TabNavigationBar({

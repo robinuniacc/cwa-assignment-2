@@ -1,9 +1,7 @@
+"use server";
+
 import { Tab } from "./tab";
-import {
-  tabPanelTemplate,
-  tabTitleTemplate,
-  pageTemplate,
-} from "./template-html-const";
+import { readFileSync } from "fs";
 
 type TabPanelParams = {
   tabId: string;
@@ -19,6 +17,21 @@ type TabContentParams = {
   tabPanelHtmls: string;
   tabTitleHtmls: string;
 };
+
+const tabTitleTemplate = readFileSync(
+  "./src/server-actions/tab-generator/tab-title.template.html",
+  "utf-8",
+);
+
+const tabPanelTemplate = readFileSync(
+  "./src/server-actions/tab-generator/tab-panel.template.html",
+  "utf-8",
+);
+
+const pageTemplate = readFileSync(
+  "./src/server-actions/tab-generator/index.template.html",
+  "utf-8",
+);
 
 function generateHTMLFromTemplate(
   template: string,

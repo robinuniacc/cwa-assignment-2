@@ -1,4 +1,4 @@
-import { generateTabId, Tab } from "@/lib/tab";
+import { generateTabId, Tab } from "@/server-actions/tab-generator/tab";
 import { useEffect } from "react";
 import Cookies from "js-cookie";
 

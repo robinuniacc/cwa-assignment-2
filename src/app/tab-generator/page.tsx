@@ -9,8 +9,8 @@ import { faPlus } from "@fortawesome/free-solid-svg-icons/faPlus";
 import { faTrash } from "@fortawesome/free-solid-svg-icons/faTrash";
 import useLocalStorage from "@/hooks/tabs/useLocalStorage";
 import { setCookie } from "@/lib/web";
-import { generateTabId, Tab } from "@/lib/tab";
-import { generateHTMLFromTabs } from "@/lib/html";
+import { generateTabId, Tab } from "../../server-actions/tab-generator/tab";
+import { generateHTMLFromTabs } from "../../server-actions/tab-generator/html";
 import Cookies from "js-cookie";
 
 export default function Home() {
@@ -21,6 +21,7 @@ export default function Home() {
       content: "",
     },
   ]);
+  const [htmlContent, setHtmlContent] = useState<string>("");
 
   const [activeTabId, setActiveTabId] = useState<string>(tabs[0].id);
 
@@ -31,6 +32,13 @@ export default function Home() {
 
   // Load from localStorage once on mount
   useLocalStorage({ setTabs, setActiveTabId });
+
+  useEffect(() => {
+    async function updatePreview() {
+      setHtmlContent(generateHTMLFromTabs(tabs));
+    }
+    updatePreview();
+  }, [tabs]);
 
   // Persist to localStorage whenever tabs or activeId change
   useEffect(() => {
@@ -131,7 +139,7 @@ export default function Home() {
           />
         </div>
 
-        <CodePreview htmlContent={generateHTMLFromTabs(tabs)} />
+        <CodePreview htmlContent={htmlContent} />
       </div>
     </div>
   );

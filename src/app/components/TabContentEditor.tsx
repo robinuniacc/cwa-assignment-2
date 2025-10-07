@@ -1,4 +1,4 @@
-import { Tab } from "@/lib/tab";
+import { Tab } from "@/server-actions/tab-generator/tab";
 import { faPen } from "@fortawesome/free-solid-svg-icons/faPen";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 
