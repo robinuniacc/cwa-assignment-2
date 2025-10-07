@@ -1,0 +1,18 @@
+services:
+  postgres:
+    image: postgres:18-alpine
+    container_name: postgres
+    restart: always
+    ports:
+      - "5432:5432"
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+      POSTGRES_DB: escaperoom
+    volumes:
+      - ./postgres/data:/var/lib/postgresql/18/docker
+    healthcheck:
+      test: ["CMD", "pg_isready"]
+      interval: 4s
+      timeout: 4s
+      retries: 3

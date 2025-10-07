@@ -3,13 +3,13 @@ import { useState } from "react";
 import Workspace from "./Workspace";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faTrash } from "@fortawesome/free-solid-svg-icons";
-import useAttemptRestore from "./loadFromBrowserStorage";
 import {
   Dialog,
   DialogContent,
   DialogTitle,
   DialogTrigger,
 } from "../components/shadcn/dialog";
+import useDbAndS3 from "@/hooks/escape-room/useDbAndS3";
 
 /* TODO:
 1. Undo & redo.
@@ -87,7 +87,8 @@ export default function EscapeRoomPage() {
     hasAttemptedRestore,
     imgSize,
     setImgSize,
-  } = useAttemptRestore();
+    save,
+  } = useDbAndS3();
 
   async function handleBgImgChange(newImgUrl: string) {
     const imgBlob = await fetch(newImgUrl).then((r) => r.blob());
@@ -190,6 +191,14 @@ export default function EscapeRoomPage() {
               title="Preview Escape Room"
             >
               Preview
+            </button>
+            <button
+              type="button"
+              onClick={() => save()}
+              className="flex items-center gap-1 px-3 py-1.5 bg-[var(--color-red-latrobe)] text-white rounded hover:cursor-pointer hover:opacity-80"
+              title="Save Escape Room"
+            >
+              Save
             </button>
             <InstructionsDialog />
           </div>
