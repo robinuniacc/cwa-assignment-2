@@ -15,8 +15,8 @@ Follow these steps to set up and run the project locally:
 1. **Clone the repository:**
 
    ```bash
-   git clone https://github.com/RaksaRobin/cwa-assignment-1.git
-   cd cwa-assignment-1
+   git clone https://github.com/RaksaRobin/cwa-assignment-2.git
+   cd cwa-assignment-2
    ```
 
 2. **Install dependencies:**
@@ -47,15 +47,13 @@ Follow these steps to set up and run the project locally:
    npm run lint
    ```
 
-   I try to build the app as scalable as possible. It's very easy to just code, code, code to meet the requirements.
+I try to build the app as scalable as possible. It's very easy to just code, code, code to meet the requirements.
 
 Since this project seems somewhat exciting, I took on the challenge of making it scalable.
 
 # Escape room
 
 ## Overview
-
-Whatever is supported in the escape room builder is supported here.
 
 Currently, a prompt is composed of components. Components can be of 3 types -- text, code, or line break.
 
@@ -65,11 +63,11 @@ As of now, the dependencies are the Poppins font from Google Fonts, normalize.cs
 
 These dependencies can also be copied/pasted into the code directly.
 
-Event listeners that uses to user-defined JavaScript code has to be attached dynamically, not inline.
+Event listeners that uses user-defined JavaScript code has to be attached dynamically, not inline.
 
 ## Visuals
 
-As mentioned earlier, right now it uses normalize.css and he.js.
+As mentioned earlier, right now it uses Poppins, normalize.css and, he.js.
 
 Question sprites are rendered as circles 32px wide. A sprite by default is rendered aqua; if the user's answer to the question is correct, the sprite is rendered green.
 
