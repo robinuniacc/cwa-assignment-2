@@ -19,9 +19,10 @@ import { Question } from "./typings";
 import { cn, limitStrLen } from "@/lib/utils";
 import { useResizeDetector } from "react-resize-detector";
 import { EditorContext } from "./workSpaceContext";
+import Image from "next/image";
 
 const HIGHLIGHTED_QUESTION_ANIMATION_MS = 1000;
-const QUESTION_SPRITE_SIZE = 32;
+const QUESTION_SPRITE_SIZE = 40;
 
 function computeQuestionSpriteCSSTop(y: number) {
   return y - QUESTION_SPRITE_SIZE / 2;
@@ -165,13 +166,17 @@ export default function QuestionSprite({
         // Prevent dialog open on drag
         tabIndex={0}
       >
-        <div
-          className="rounded-4xl bg-blue-900"
+        <Image
+          className="rounded-4xl"
           style={{
             width: QUESTION_SPRITE_SIZE,
             height: QUESTION_SPRITE_SIZE,
           }}
-        ></div>
+          src={"/question-mark.png"}
+          alt="Question Sprite"
+          width={QUESTION_SPRITE_SIZE}
+          height={QUESTION_SPRITE_SIZE}
+        />
         <div className="bg-foreground text-background w-fit rounded-[8px] shadow-2xl p-2 max-w-28 text-[10px] text-center">
           {limitStrLen(question.prompt.map((p) => p.prompt).join(" "), 34)}
         </div>
