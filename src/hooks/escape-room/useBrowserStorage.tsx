@@ -23,7 +23,7 @@ async function loadImageFromIndexedDB() {
 
 // Handles loading/storing the escape room's bg img and questions from/to browser storage
 // Img is stored in IndexedDB -- questions in localStorage
-export default function useAttemptRestore() {
+export default function useBrowserStorage() {
   const [bgImgUrl, setBgImgUrl] = useState<string | null>(null);
   const [questions, setQuestions] = useState<Question[]>([]);
   const [hasAttemptedRestore, setHasAttemptedRestore] = useState(false);
