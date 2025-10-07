@@ -1,6 +1,6 @@
 const s3 = require("@aws-sdk/client-s3");
 
-const S3_ESCAPE_ROOM_HTML_TEMPLATE_KEY = "res/escape-room-template.html";
+const S3_ESCAPE_ROOM_HTML_TEMPLATE_KEY = "res/escape-room.template.html";
 const QUESTIONS_REGEX = /{{questions}}/g;
 const IMAGE_MIME_TYPE_REGEX = /{{bgImgMimeType}}/g;
 const IMAGE_SRC_REGEX = /{{bgImgBase64}}/g;
