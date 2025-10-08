@@ -4,7 +4,7 @@ import { Question } from "../typings";
 import { InvokeCommand, LambdaClient } from "@aws-sdk/client-lambda";
 
 const LAMBDA_CLIENT = new LambdaClient({
-  region: process.env.AWS_REGION,
+  region: process.env.NEXT_PUBLIC_AWS_REGION,
   credentials: {
     accessKeyId: process.env.AWS_ACCESS_KEY_ID!,
     secretAccessKey: process.env.AWS_SECRET_ACCESS_KEY!,
@@ -45,17 +45,12 @@ export async function POST(request: Request) {
     InvocationType: "RequestResponse",
   });
 
-  const { Payload, StatusCode, FunctionError } =
-    await LAMBDA_CLIENT.send(invokeCommand);
+  const { StatusCode, FunctionError } = await LAMBDA_CLIENT.send(invokeCommand);
 
-  if (!Payload || StatusCode !== 200) {
+  if (StatusCode !== 200) {
     console.error("Lambda invocation failed", { StatusCode, FunctionError });
     return new Response("Failed to generate preview", { status: 500 });
   }
-  const result = JSON.parse(Buffer.from(Payload).toString()).body;
 
-  return new Response(result, {
-    status: 200,
-    headers: { "Content-Type": "text/html" },
-  });
+  return new Response(null, { status: 204 });
 }

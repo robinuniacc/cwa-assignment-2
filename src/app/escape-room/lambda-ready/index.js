@@ -1,6 +1,8 @@
 const s3 = require("@aws-sdk/client-s3");
 
+const BUCKET_NAME = "cwa-assignment-2";
 const S3_ESCAPE_ROOM_HTML_TEMPLATE_KEY = "res/escape-room.template.html";
+const S3_ESCAPE_ROOM_HTML_KEY = "finished/escape-room.html";
 const QUESTIONS_REGEX = /{{questions}}/g;
 const IMAGE_MIME_TYPE_REGEX = /{{bgImgMimeType}}/g;
 const IMAGE_SRC_REGEX = /{{bgImgBase64}}/g;
@@ -9,7 +11,7 @@ const IMAGE_HEIGHT_REGEX = /{{bgImgHeight}}/g;
 
 const S3_CLIENT = new s3.S3Client({});
 const GET_ESCAPE_ROOM_HTML_TEMPLATE_COMMAND = new s3.GetObjectCommand({
-  Bucket: process.env.BUCKET_NAME,
+  Bucket: BUCKET_NAME,
   Key: S3_ESCAPE_ROOM_HTML_TEMPLATE_KEY,
 });
 
@@ -61,12 +63,16 @@ exports.handler = async (event, context) => {
     .replace(IMAGE_WIDTH_REGEX, bgImgSize.width)
     .replace(IMAGE_HEIGHT_REGEX, bgImgSize.height);
 
+  await S3_CLIENT.send(
+    new s3.PutObjectCommand({
+      Bucket: BUCKET_NAME,
+      Key: S3_ESCAPE_ROOM_HTML_KEY,
+      Body: html,
+      ContentType: "text/html",
+    }),
+  );
+
   return {
-    statusCode: 200,
-    headers: {
-      "Content-Type": "text/html",
-    },
-    body: html,
-    isBase64Encoded: false,
+    statusCode: 204,
   };
 };

@@ -17,8 +17,8 @@ import { imageSize } from "image-size";
 
 const S3_CLIENT = new S3Client({});
 const S3_GET_OBJ_CMD = new GetObjectCommand({
-  Bucket: process.env.NAME_S3_BUCKET_PREVIEW!,
-  Key: `${process.env.PREFIX_S3_BUCKET_PREVIEW!}/bgimg`,
+  Bucket: process.env.NEXT_PUBLIC_S3_BUCKET_NAME!,
+  Key: `${process.env.NEXT_PUBLIC_PREFIX_S3_BUCKET_PREVIEW!}/bgimg`,
 });
 
 function convertTSQuestionTypeToDBType(type: Question["type"]): DBQuestionType {
@@ -167,8 +167,8 @@ async function saveData(latestData: {
   if (latestData.bgImgBlob) {
     await S3_CLIENT.send(
       new PutObjectCommand({
-        Bucket: process.env.NAME_S3_BUCKET_PREVIEW!,
-        Key: `${process.env.PREFIX_S3_BUCKET_PREVIEW!}/bgimg`,
+        Bucket: process.env.NEXT_PUBLIC_S3_BUCKET_NAME!,
+        Key: `${process.env.NEXT_PUBLIC_PREFIX_S3_BUCKET_PREVIEW!}/bgimg`,
         Body: Buffer.from(await latestData.bgImgBlob.arrayBuffer()),
         ContentType: latestData.bgImgBlob.type || "",
       }),

@@ -118,8 +118,13 @@ export default function EscapeRoomPage() {
       }),
     });
 
-    const html = await response.text();
-    window.open()?.document.writeln(html);
+    if (!response.ok) {
+      alert("Failed to generate preview URL");
+      return;
+    }
+
+    const url = `https://${process.env.NEXT_PUBLIC_S3_BUCKET_NAME}.s3.${process.env.NEXT_PUBLIC_AWS_REGION}.amazonaws.com/${process.env.NEXT_PUBLIC_PREFIX_S3_BUCKET_FINISHED}/${process.env.NEXT_PUBLIC_S3_ESCAPE_ROOM_HTML_FINISHED_KEY}`;
+    window.open(url, "_blank");
   }
 
   return (

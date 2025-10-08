@@ -1,0 +1,952 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Escape Room</title>
+
+    <!-- normalize.css -->
+    <link
+      rel="stylesheet"
+      href="https://necolas.github.io/normalize.css/latest/normalize.css"
+    />
+
+    <!-- Poppins from Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Poppins:ital,wght@0,100;0,200;0,300;0,400;0,500;0,600;0,700;0,800;0,900;1,100;1,200;1,300;1,400;1,500;1,600;1,700;1,800;1,900&display=swap"
+      rel="stylesheet"
+    />
+
+    <style>
+      body {
+        font-family: "Poppins", sans-serif;
+      }
+    </style>
+  </head>
+  <body>
+    <div id="container">
+      <div
+        style="
+          display: flex;
+          justify-content: center;
+          align-items: center;
+          gap: 1rem;
+          position: sticky;
+          top: 0;
+          width: 100%;
+          height: 5rem;
+          background-color: white;
+          z-index: 5;
+        "
+      >
+        <h1 style="text-align: center">Time left - <span id="timer"></span></h1>
+        <button
+          id="escape-now-btn"
+          type="button"
+          style="
+            border: none;
+            border-radius: 0.375rem;
+            background-color: #e2231b;
+            color: white;
+            padding: 0.5rem 1rem;
+          "
+        >
+          Click to Finish
+        </button>
+      </div>
+      <div style="display: flex; justify-content: center">
+        <div id="canvas" style="position: relative; overflow-x: auto">
+          <img
+            id="bg-img"
+            src="../public/escape-room-bg.jpg"
+            alt="Escape Room Background Image"
+            style="
+              border-radius: 0.5rem;
+              box-shadow:
+                0 1px 3px 0 rgba(0, 0, 0, 0.1),
+                0 1px 2px 0 rgba(0, 0, 0, 0.06);
+              width: 1080px;
+              height: 720px;
+              pointer-events: none;
+            "
+          />
+          <div
+            id="question-sprites-container"
+            style="
+              position: absolute;
+              top: 0;
+              width: 100%;
+              bottom: 0;
+              opacity: 1;
+              overflow: visible;
+            "
+          >
+            <!-- Question sprites go here -->
+          </div>
+        </div>
+      </div>
+    </div>
+    <!-- Modal -->
+    <div
+      id="modal-overlay"
+      style="
+        display: none;
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100vw;
+        height: 100vh;
+        background: rgba(0, 0, 0, 0.5);
+        z-index: 500;
+        justify-content: center;
+        align-items: center;
+        pointer-events: auto;
+      "
+    >
+      <div
+        id="modal-content"
+        style="
+          background: white;
+          border-radius: 0.5rem;
+          padding: 2rem;
+          min-width: 300px;
+          height: fit-content;
+          max-height: 75dvh;
+          overflow-y: auto;
+          box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
+          position: relative;
+        "
+      >
+        <button
+          id="modal-close"
+          style="
+            position: absolute;
+            top: 0.5rem;
+            right: 0.5rem;
+            background: transparent;
+            border: none;
+            font-size: 1.5rem;
+            cursor: pointer;
+          "
+          type="button"
+        >
+          &times;
+        </button>
+        <div id="modal-body" style="max-width: 600px; max-height: 600px">
+          <!-- Modal content goes here -->
+        </div>
+      </div>
+    </div>
+
+    <div
+      id="disable-interactions-overlay"
+      style="
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100vw;
+        height: 100vh;
+        z-index: 9999;
+        background: transparent;
+        display: none;
+      "
+      onclick="event.stopPropagation(); event.preventDefault();"
+      onmousedown="event.stopPropagation(); event.preventDefault();"
+      onmouseup="event.stopPropagation(); event.preventDefault();"
+    ></div>
+
+    <!-- Dependencies -->
+    <script src="https://cdn.jsdelivr.net/npm/he@1.2.0/he.js">
+      // HTML entity escaping/encoding/decoding library
+    </script>
+
+    <!-- Primitives -->
+    <script>
+      const QUESTION_SPRITE_SIZE = 32;
+      const TIME_GIVEN_SECONDS = 60 * 60;
+
+      const QUESTIONS = [
+        {
+          id: "2",
+          type: "short-answer",
+          prompt: [{ type: "text", prompt: "What is 2 + 2?" }],
+          answer: "4",
+          position: { centerX: 100, centerY: 100 },
+        },
+        {
+          id: "1",
+          type: "short-answer",
+          prompt: [{ type: "text", prompt: "What is 2 + 2?" }],
+          answer: "4",
+          position: { centerX: 350, centerY: 100 },
+        },
+      ];
+      const HTML_MODAL_TEMPLATES = {
+        prompts: {
+          text: `<p style="margin: 0;">{prompt}</p>`,
+          code: `<pre
+                  style="margin: 0rem 0 -1rem 0; line-height: 1.5rem"
+                ><code>{prompt}
+                </code></pre>`,
+          newline: `<br/>`,
+        },
+
+        "short-answer": {
+          base: `
+                {prompts}
+                {inputField}
+                <div style="display: flex; justify-content: center; margin-top: 1rem">
+                  <button id="submit-ans" type="button">
+                    Submit
+                  </button>
+                </div>
+      `,
+          "single-line-blank": `<input id="answer-input" type="text" style="width: 100%" value="{defaultValue}"/>
+      `,
+          "multi-line-blank": `<textarea id="answer-input" style="width: 100%; resize: none" rows="1" oninput="handleTextAreaResize(this, event)">{defaultValue}</textarea>
+      `,
+        },
+
+        "multiple-choice": {
+          base: `{prompts}
+              <div style="display: flex; flex-direction: column; gap: 0.5rem">
+                {choices}
+                  <div style="display: flex; justify-content: center; margin-top: 1rem">
+                    <button id="submit-ans" type="button">
+                      Submit
+                    </button>
+                  </div>`,
+          choice: `<input id="{choice}-chkbox" type="checkbox" name="mcq" value="{choice}" style="display: none"/>
+                  <label for="{choice}-chkbox" style="padding: 0.25rem; border-radius: 0.375rem; margin-bottom: -0.25rem;">{choice}</label>`,
+        },
+
+        "true-false": `
+              {prompts}
+              <div style="display: flex; justify-content: center">
+                <select style="width: 100%; text-align: center; border-radius: 4px" name="true-false">
+                  <option value="empty"></option>
+                  <option value="true">True</option>
+                  <option value="false">False</option>
+                </select>
+              </div>
+              <div style="display: flex; justify-content: center; margin-top: 1rem">
+                  <button id="submit-ans" type="button">
+                    Submit
+                  </button>
+                </div>
+            `,
+
+        "fill-in-the-blanks": {
+          base: `{prompts}
+        <div style="display: flex; justify-content: center; margin-top: 1rem">
+          <button id="submit-ans" type="button">
+            Submit
+          </button>
+        </div>
+      `,
+          "non-blank": `<p style="display: inline-block; margin: 0;">{text}</p>`,
+          "single-line-blank": `<input
+        id="answer-input-{id}"
+        type="text"
+        value="{defaultValue}"
+        style="width: {width}"/>`,
+          "multi-line-blank": `<textarea
+        id="answer-input-{id}"
+        style="display: block; width: 100%; margin-top: 0.25rem; margin-left: {marginLeft}rem; margin-bottom: 0.25rem; resize: none;"
+        oninput="handleTextAreaResize(this, event)"
+        rows="1"
+      >{defaultValue}</textarea>`,
+        },
+      };
+      const CSS_MODAL_SUBMIT_ANS = `
+              width: 5rem;
+              background-color: #22c95c;
+              color: white;
+              border: none;
+              padding: 0.5rem;
+              border-radius: 0.375rem;
+              cursor: pointer;`;
+
+      const QUESTION_SPRITE_HTML_TEMPLATE = `
+              <img
+                data-question-id="{questionId}"
+                onmouseover="this.style.cursor='pointer'"
+                style="
+                  width: 40px;
+                  height: 40px;
+                  position: absolute;
+                  top: {top}px;
+                  left: {left}px;
+                  border-radius: 100%;
+                "
+                src="https://cwa-assignment-2.s3.ap-southeast-2.amazonaws.com/res/question-mark.png"
+              ></img>
+      `;
+      const QUESTION_SPRITE_CORRECT_HTML_TEMPLATE = `
+              <img
+                data-question-id="{questionId}"
+                onmouseover="this.style.cursor='pointer'"
+                style="
+                  width: 40px;
+                  height: 40px;
+                  position: absolute;
+                  top: {top}px;
+                  left: {left}px;
+                  border-radius: 100%;
+                "
+                src="https://cwa-assignment-2.s3.ap-southeast-2.amazonaws.com/res/question-mark-green.png"
+              ></img>
+      `;
+    </script>
+
+    <!-- Timer -->
+    <script>
+      let timeLeftSeconds = TIME_GIVEN_SECONDS;
+      let shouldTimerRun = true;
+      let timerInterval;
+
+      const timerElement = document.getElementById("timer");
+
+      function updateTimer() {
+        if (!shouldTimerRun) return;
+
+        const minutes = Math.floor(timeLeftSeconds / 60);
+        const seconds = timeLeftSeconds % 60;
+        timerElement.textContent = `${minutes.toString().padStart(2, "0")}:${seconds.toString().padStart(2, "0")}`;
+        if (timeLeftSeconds <= 0) {
+          clearInterval(timerInterval);
+          openModal("<p>Time is up!</p>");
+        }
+        timeLeftSeconds--;
+      }
+
+      updateTimer();
+      timerInterval = setInterval(updateTimer, 1000);
+    </script>
+
+    <!-- Business Logic -->
+    <script>
+      function onEscapeSuccessful() {
+        shouldTimerRun = false;
+        openModal("<h1>Congratulations! You've escaped!</h1>");
+        document.getElementById("disable-interactions-overlay").style.display =
+          "block";
+        document.getElementById("modal-overlay").style.pointerEvents = "none";
+      }
+
+      function onEscapeNowClick() {
+        if (markEscapeSuccessfulIfAllAnsAreCorrect()) return;
+        openModal("<p>You haven't answered all questions correctly yet!</p>");
+      }
+    </script>
+
+    <!-- Styles -->
+    <script>
+      function updateAllElementsStyles() {
+        // Update textarea styles
+        const textareas = document.querySelectorAll("textarea");
+        textareas.forEach((ta) => handleTextAreaResize(ta));
+
+        updateAllButtonStyles();
+        updateAllCheckboxStyles();
+      }
+
+      function updateAllButtonStyles() {
+        // General buttons styles
+        const buttons = document.querySelectorAll("button");
+        buttons.forEach((btn) => {
+          btn.addEventListener("mouseover", () => {
+            btn.style.opacity = "0.5";
+            btn.style.cursor = "pointer";
+          });
+          btn.addEventListener("mouseout", () => {
+            btn.style.opacity = "1";
+          });
+        });
+
+        // Submit answer button styles
+        const submitAnsBtn = document.getElementById("submit-ans");
+        if (!submitAnsBtn) return;
+        submitAnsBtn.style.cssText = CSS_MODAL_SUBMIT_ANS;
+      }
+
+      // Checkbox styling logic
+      function updateAllCheckboxStyles() {
+        const checkboxes = document.querySelectorAll('input[type="checkbox"]');
+        const bgColorChecked = "#bbdefb";
+        const bgColorHover = "#deefff";
+        const textColorChecked = "white";
+
+        function updateStyle(checkbox, label) {
+          if (checkbox.checked) {
+            label.style.backgroundColor = bgColorChecked;
+            label.style.color = textColorChecked;
+          } else {
+            label.style.backgroundColor = "";
+            label.style.color = "";
+          }
+        }
+
+        checkboxes.forEach((checkbox) => {
+          const label = document.querySelector(`label[for="${checkbox.id}"]`);
+
+          updateStyle(checkbox, label);
+          checkbox.addEventListener("change", () =>
+            updateStyle(checkbox, label),
+          );
+          label.addEventListener("mouseover", () => {
+            label.style.backgroundColor = bgColorHover;
+            label.style.color = textColorChecked;
+          });
+          label.addEventListener("mouseout", () => {
+            label.style.backgroundColor = checkbox.checked
+              ? bgColorChecked
+              : "";
+            label.style.color = checkbox.checked ? textColorChecked : "";
+          });
+        });
+      }
+
+      updateAllElementsStyles();
+
+      // Textarea auto-resize logic
+      function handleTextAreaResize(textarea, event) {
+        textarea.style.height = "";
+        textarea.style.height = `${textarea.scrollHeight}px`;
+      }
+    </script>
+
+    <!-- Modal Logic -->
+    <script>
+      const modalOverlay = document.getElementById("modal-overlay");
+      const modalClose = document.getElementById("modal-close");
+
+      function openModal(contentHtml) {
+        if (contentHtml) {
+          document.getElementById("modal-body").innerHTML = contentHtml;
+        }
+
+        modalOverlay.style.display = "flex";
+        // Prevent background interaction
+        document.body.style.pointerEvents = "none";
+
+        // Focus modal for accessibility
+        document.getElementById("modal-content").focus();
+
+        // Add styles
+        updateAllElementsStyles();
+      }
+
+      function closeModal() {
+        const submitAnsBtn = document.getElementById("submit-ans");
+        if (submitAnsBtn) submitAnsBtn.click();
+
+        modalOverlay.style.display = "none";
+
+        // Restore background interaction
+        document.body.style.overflow = "";
+        document.body.style.pointerEvents = "";
+      }
+
+      // Close modal on Escape key
+      document.addEventListener("keydown", function (e) {
+        if (
+          modalOverlay.style.display === "flex" &&
+          (e.key === "Escape" || e.key === "Esc")
+        ) {
+          closeModal();
+        }
+      });
+
+      modalClose.addEventListener("click", closeModal);
+      modalOverlay.addEventListener("click", function (e) {
+        if (e.target === modalOverlay) closeModal();
+      });
+    </script>
+
+    <!-- Templating -->
+    <script>
+      function renderHTMLTemplate(template, data) {
+        return template.replace(/{(\w+)}/g, (match, key) => {
+          return key in data ? data[key] : match;
+        });
+      }
+    </script>
+
+    <!-- Question Submission -->
+    <script>
+      let userAnswers = QUESTIONS.map((q) => {
+        switch (q.type) {
+          case "short-answer":
+            return { questionId: q.id, answer: "" };
+          case "multiple-choice":
+            return { questionId: q.id, answer: [] };
+          case "true-false":
+            return { questionId: q.id, answer: null };
+          case "fill-in-the-blanks":
+            return {
+              questionId: q.id,
+              answer: Array(q.answer.length).fill(""),
+            };
+          default:
+            throw new Error(
+              "Unexpected question type when initializing 'userAnswers'",
+            );
+        }
+      });
+
+      function onSubmitShortAnsQ(questionId) {
+        const answer = document.querySelector("#answer-input").value;
+        const correctAnswer = QUESTIONS.find(
+          (q) => q.id === questionId,
+        )?.answer;
+
+        let isCorrect = false;
+        if (answer === correctAnswer) {
+          isCorrect = true;
+        }
+
+        userAnswers = userAnswers.map((ua) =>
+          ua.questionId === questionId ? { ...ua, answer, isCorrect } : ua,
+        );
+
+        onSubmitAnyQ(questionId, isCorrect);
+      }
+
+      function onSubmitMCQ(questionId) {
+        // Select the checked radio button in one line
+        const selectedElements = Array.from(
+          document.querySelectorAll('input[name="mcq"]:checked'),
+        );
+        const userChoices = selectedElements.map((el) => el.value);
+
+        const question = QUESTIONS.find((q) => q.id === questionId);
+        let isCorrect = true;
+        for (const c of question.choices) {
+          if (!c.isCorrect) continue;
+          if (!userChoices.includes(c.choice)) {
+            isCorrect = false;
+            break;
+          }
+        }
+
+        userAnswers = userAnswers.map((ua) =>
+          ua.questionId === questionId
+            ? { ...ua, answer: userChoices, isCorrect }
+            : ua,
+        );
+        onSubmitAnyQ(questionId, isCorrect);
+      }
+
+      function onSubmitTrueFalseQ(questionId) {
+        let answer = document.querySelector('select[name="true-false"]').value;
+        if (answer === "empty") answer = null;
+        else answer = answer === "true";
+
+        // boolean
+        const correctAnswer = QUESTIONS.find(
+          (q) => q.id === questionId,
+        )?.answer;
+
+        const isCorrect = answer === correctAnswer;
+        userAnswers = userAnswers.map((ua) =>
+          ua.questionId === questionId
+            ? { ...ua, answer: answer, isCorrect }
+            : ua,
+        );
+
+        onSubmitAnyQ(questionId, isCorrect);
+      }
+
+      function onSubmitFITBQ(questionId) {
+        const question = QUESTIONS.find((q) => q.id === questionId);
+        if (!question || question.type !== "fill-in-the-blanks") return;
+
+        const answers = [];
+        for (let i = 0; i < question.answer.length; i++) {
+          const answer = document.getElementById(`answer-input-${i}`).value;
+          answers.push(answer);
+        }
+
+        let isCorrect =
+          answers.length === question.answer.length &&
+          answers.every((ans, idx) => ans === (question.answer[idx] || ""));
+
+        userAnswers = userAnswers.map((ua) =>
+          ua.questionId === questionId
+            ? { ...ua, answer: answers, isCorrect }
+            : ua,
+        );
+        onSubmitAnyQ(questionId, isCorrect);
+      }
+
+      function onSubmitAnyQ(questionId, isCorrect) {
+        console.log(userAnswers);
+        closeModal();
+
+        // Update question sprite to green if correct/incorrect
+        const sprite = document.querySelector(
+          `[data-question-id="${questionId}"]`,
+        );
+        if (!sprite) return;
+        sprite.outerHTML = renderQuestionSprite(
+          QUESTIONS.find((q) => q.id === questionId),
+          isCorrect,
+        );
+        markEscapeSuccessfulIfAllAnsAreCorrect();
+      }
+
+      function markEscapeSuccessfulIfAllAnsAreCorrect() {
+        const allCorrect = userAnswers.every((ua) => ua.isCorrect);
+        if (!allCorrect) return false;
+
+        onEscapeSuccessful();
+        return true;
+      }
+    </script>
+
+    <!-- Render -->
+    <script>
+      document
+        .getElementById("escape-now-btn")
+        .addEventListener("click", (e) => onEscapeNowClick());
+
+      function computeQuestionSpriteCSSTop(centerY) {
+        return centerY - QUESTION_SPRITE_SIZE / 2;
+      }
+      function computeQuestionSpriteCSSLeft(centerX) {
+        return centerX - QUESTION_SPRITE_SIZE / 2;
+      }
+
+      function renderQuestionSprite(question, isAnsweredCorrectlyByUser) {
+        const { id, position } = question;
+        const x = computeQuestionSpriteCSSLeft(position.centerX);
+        const y = computeQuestionSpriteCSSTop(position.centerY);
+
+        const questionSpriteHtml = renderHTMLTemplate(
+          !isAnsweredCorrectlyByUser
+            ? QUESTION_SPRITE_HTML_TEMPLATE
+            : QUESTION_SPRITE_CORRECT_HTML_TEMPLATE,
+          {
+            questionId: id,
+            top: y,
+            left: x,
+          },
+        );
+        container.insertAdjacentHTML("beforeend", questionSpriteHtml);
+        container.lastElementChild.addEventListener("click", () => {
+          openAnswerQuestionModal(id);
+        });
+      }
+
+      // Render question sprites
+      const container = document.getElementById("question-sprites-container");
+      QUESTIONS.forEach((q) => renderQuestionSprite(q));
+
+      // Renders modal content and opens modal
+      function openAnswerQuestionModal(questionId) {
+        const question = QUESTIONS.find((q) => q.id === questionId);
+        if (!question) return;
+
+        let onFinishOpenModal = () => {};
+
+        // The HTML inside the modal body
+        // For fill-in-the-blanks (FITB) questions, the answer fields (the blanks) coincide with the prompts
+        // So, for rendering purposes for FITB Qs, we'll just treat both the prompts and answers as prompts.
+        let modalInnerHtml = "";
+        switch (question.type) {
+          case "short-answer":
+            modalInnerHtml = HTML_MODAL_TEMPLATES["short-answer"].base;
+            onFinishOpenModal = () =>
+              document
+                .getElementById("submit-ans")
+                ?.addEventListener("click", () =>
+                  onSubmitShortAnsQ(questionId),
+                );
+            break;
+          case "multiple-choice":
+            modalInnerHtml = HTML_MODAL_TEMPLATES["multiple-choice"].base;
+            onFinishOpenModal = () =>
+              document
+                .getElementById("submit-ans")
+                ?.addEventListener("click", () => onSubmitMCQ(questionId));
+            break;
+          case "true-false":
+            modalInnerHtml = HTML_MODAL_TEMPLATES["true-false"];
+            onFinishOpenModal = () =>
+              document
+                .getElementById("submit-ans")
+                ?.addEventListener("click", () =>
+                  onSubmitTrueFalseQ(questionId),
+                );
+            break;
+          case "fill-in-the-blanks":
+            openAnswerFITBQModal(questionId);
+            return;
+          default:
+            modalInnerHtml = "";
+        }
+        modalInnerHtml = renderHTMLTemplate(modalInnerHtml, {
+          questionId,
+        });
+
+        // Render prompts
+        let promptsHtml = "";
+        question.prompt.forEach((p) => {
+          if (p.type === "text") {
+            promptsHtml += renderHTMLTemplate(
+              HTML_MODAL_TEMPLATES.prompts.text,
+              {
+                prompt: he.encode(p.prompt),
+              },
+            );
+          } else if (p.type === "code") {
+            promptsHtml += renderHTMLTemplate(
+              HTML_MODAL_TEMPLATES.prompts.code,
+              {
+                prompt: he.encode(p.prompt),
+              },
+            );
+          } else if (p.type === "newline") {
+            promptsHtml += HTML_MODAL_TEMPLATES.prompts.newline;
+          } else {
+            throw new Error(`Unexpected prompt type: ${p.type}`);
+          }
+        });
+        modalInnerHtml = renderHTMLTemplate(modalInnerHtml, {
+          prompts: promptsHtml,
+        });
+
+        // Render answer fields
+        switch (question.type) {
+          case "short-answer":
+            if (question.answer.includes("\n"))
+              modalInnerHtml = renderHTMLTemplate(modalInnerHtml, {
+                inputField:
+                  HTML_MODAL_TEMPLATES["short-answer"]["multi-line-blank"],
+              });
+            else
+              modalInnerHtml = renderHTMLTemplate(modalInnerHtml, {
+                inputField:
+                  HTML_MODAL_TEMPLATES["short-answer"]["single-line-blank"],
+              });
+
+            modalInnerHtml = renderHTMLTemplate(modalInnerHtml, {
+              defaultValue: he.encode(
+                userAnswers.find((ua) => ua.questionId === questionId)
+                  ?.answer || "",
+              ),
+            });
+            break;
+          case "multiple-choice": {
+            // Render choices
+            let choicesHtml = "";
+            question.choices.forEach((choice) => {
+              choicesHtml += renderHTMLTemplate(
+                HTML_MODAL_TEMPLATES["multiple-choice"].choice,
+                {
+                  choice: he.encode(choice.choice),
+                },
+              );
+            });
+            modalInnerHtml = renderHTMLTemplate(modalInnerHtml, {
+              choices: choicesHtml,
+            });
+
+            // Check the checkboxes based on userAnswers
+            const temp = document.createElement("div");
+            temp.innerHTML = modalInnerHtml;
+
+            userAnswers
+              .find((ua) => ua.questionId === questionId)
+              .answer.forEach((ans) => {
+                const checkbox = temp.querySelector(`input[value="${ans}"]`);
+                if (checkbox) checkbox.setAttribute("checked", "true");
+              });
+            modalInnerHtml = temp.innerHTML;
+            break;
+          }
+          case "true-false": {
+            let answer = userAnswers.find(
+              (ua) => ua.questionId === questionId,
+            ).answer;
+            if (answer === null) answer = "empty";
+            else answer = answer.toString();
+
+            // Set the selected attribute based on userAnswers
+            const temp = document.createElement("div");
+            temp.innerHTML = modalInnerHtml;
+
+            temp
+              .querySelector(
+                `select[name="true-false"] option[value="${answer}"]`,
+              )
+              .setAttribute("selected", "true");
+
+            modalInnerHtml = temp.innerHTML;
+            break;
+          }
+          default:
+            modalInnerHtml = "";
+        }
+
+        openModal(modalInnerHtml);
+        onFinishOpenModal();
+      }
+
+      function openAnswerFITBQModal(questionId) {
+        const question = QUESTIONS.find((q) => q.id === questionId);
+        if (!question) return;
+
+        let promptsHtml = "";
+
+        // Inputs
+        if (question.type === "fill-in-the-blanks") {
+          const blanksCt = question.prompt
+            .filter((p) => p.type === "code" || p.type === "text")
+            .map((p) => p.prompt)
+            .join("")
+            .match(/%%%/g)?.length;
+
+          if (!blanksCt || blanksCt !== question.answer.length) {
+            console.log(
+              `Error: Question ID ${question.id} has mismatched number of blanks and answers.`,
+            );
+            return;
+          }
+
+          let answerIdx = 0;
+
+          question.prompt.forEach((p) => {
+            if (p.type === "newline") {
+              promptsHtml += HTML_MODAL_TEMPLATES.prompts.newline;
+              return;
+            }
+
+            const blanksToRender = p.prompt.matchAll(/%%%/g);
+            let blanksToRenderCt = p.prompt.match(/%%%/g)?.length || 0;
+
+            let nonBlankStrStart = 0;
+            let isPreviousBlankMultiline = false;
+            let promptHTML = "";
+
+            // Render non-blank text and blanks
+            question.answer
+              .slice(answerIdx, answerIdx + blanksToRenderCt)
+              .forEach((ans) => {
+                // Add non-blanks text before each blank
+                const blankRegexMatch = blanksToRender.next();
+                const blankIdx = blankRegexMatch.value.index;
+
+                let nonBlankText = he.encode(
+                  p.prompt.slice(nonBlankStrStart, blankIdx),
+                );
+                if (p.type === "code") {
+                  if (isPreviousBlankMultiline)
+                    nonBlankText = nonBlankText.replace(/^( *)\n/g, "$1");
+                  if (ans.includes("\n"))
+                    nonBlankText = nonBlankText.replace(/\n( *)$/g, "$1");
+                }
+
+                // Render non-blank text
+                promptHTML += renderHTMLTemplate(
+                  HTML_MODAL_TEMPLATES["fill-in-the-blanks"]["non-blank"],
+                  { text: nonBlankText },
+                );
+
+                const userAnswer =
+                  userAnswers.find((ua) => ua.questionId === questionId)
+                    ?.answer[answerIdx] || "";
+
+                // Render blank
+                if (!ans.includes("\n")) {
+                  // Answer is single line, render <input>
+                  promptHTML += renderHTMLTemplate(
+                    HTML_MODAL_TEMPLATES["fill-in-the-blanks"][
+                      "single-line-blank"
+                    ],
+                    {
+                      id: answerIdx,
+                      defaultValue: he.encode(userAnswer),
+                      width: Math.min(ans.length, 10) + "rem",
+                    },
+                  );
+
+                  isPreviousBlankMultiline = false;
+                }
+                // Answer is multiline, render <textarea>
+                else if (p.type === "text") {
+                  console.log(
+                    (nonBlankText.match(/ *$/g)?.[0].length || 0) / 2,
+                  );
+                  promptHTML += renderHTMLTemplate(
+                    HTML_MODAL_TEMPLATES["fill-in-the-blanks"][
+                      "multi-line-blank"
+                    ],
+                    {
+                      id: answerIdx,
+                      marginLeft: 0,
+                      defaultValue: he.encode(userAnswer),
+                    },
+                  );
+
+                  isPreviousBlankMultiline = true;
+                } else if (p.type === "code") {
+                  promptHTML += renderHTMLTemplate(
+                    HTML_MODAL_TEMPLATES["fill-in-the-blanks"][
+                      "multi-line-blank"
+                    ],
+                    {
+                      id: answerIdx,
+                      marginLeft:
+                        (nonBlankText.match(/ *$/g)?.[0].length || 0) / 2,
+                      defaultValue: he.encode(userAnswer),
+                    },
+                  );
+
+                  isPreviousBlankMultiline = true;
+                } else {
+                  throw new Error("Unexpected prompt type");
+                }
+
+                answerIdx++;
+                nonBlankStrStart = blankIdx + 3; // Move past "%%%"
+              });
+            // Add any remaining non-blank text after the last blank
+            let nonBlankText = he.encode(p.prompt.slice(nonBlankStrStart));
+            if (p.type === "code" && isPreviousBlankMultiline)
+              nonBlankText = nonBlankText.replace(/^( *)\n/g, "$1");
+
+            promptHTML += renderHTMLTemplate(
+              HTML_MODAL_TEMPLATES["fill-in-the-blanks"]["non-blank"],
+              { text: nonBlankText },
+            );
+
+            // Add to lists of prompts html
+            promptsHtml += renderHTMLTemplate(
+              p.type === "text"
+                ? HTML_MODAL_TEMPLATES.prompts.text
+                : HTML_MODAL_TEMPLATES.prompts.code,
+              { prompt: promptHTML },
+            );
+          });
+        }
+
+        const contentHtml = renderHTMLTemplate(
+          HTML_MODAL_TEMPLATES["fill-in-the-blanks"].base,
+          {
+            prompts: promptsHtml,
+            questionId,
+          },
+        );
+
+        openModal(contentHtml);
+        document
+          .getElementById("submit-ans")
+          ?.addEventListener("click", () => onSubmitFITBQ(questionId));
+      }
+    </script>
+  </body>
+</html>
