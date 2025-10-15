@@ -123,7 +123,7 @@ export default function EscapeRoomPage() {
       return;
     }
 
-    const url = `https://${process.env.NEXT_PUBLIC_S3_BUCKET_NAME}.s3.${process.env.NEXT_PUBLIC_AWS_REGION}.amazonaws.com/${process.env.NEXT_PUBLIC_PREFIX_S3_BUCKET_FINISHED}/${process.env.NEXT_PUBLIC_S3_ESCAPE_ROOM_HTML_FINISHED_KEY}`;
+    const url = `https://${process.env.NEXT_PUBLIC_S3_BUCKET_NAME}.s3.${process.env.NEXT_PUBLIC_AWS_REGION}.amazonaws.com/${process.env.NEXT_PUBLIC_S3_PREFIX_FINISHED_ROOMS}/${process.env.NEXT_PUBLIC_S3_ESCAPE_ROOM_HTML_FINISHED_KEY}`;
     window.open(url, "_blank");
   }
 
