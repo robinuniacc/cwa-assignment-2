@@ -12,7 +12,7 @@ services:
     volumes:
       - ./postgres/data:/var/lib/postgresql/18/docker
     healthcheck:
-      test: ["CMD", "pg_isready"]
+      test: ["CMD-SHELL", "pg_isready $${POSTGRES_DB} -U $${POSTGRES_USER}"]
       interval: 4s
       timeout: 4s
       retries: 3
