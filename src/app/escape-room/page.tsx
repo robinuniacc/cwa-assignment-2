@@ -10,6 +10,7 @@ import {
   DialogTrigger,
 } from "../components/shadcn/dialog";
 import useDbAndS3 from "@/hooks/escape-room/useDbAndS3";
+import useBrowserStorage from "@/hooks/escape-room/useBrowserStorage";
 
 function InstructionsDialog() {
   return (
