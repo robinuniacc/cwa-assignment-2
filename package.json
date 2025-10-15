@@ -7,6 +7,7 @@
     "build": "next build",
     "start": "next start",
     "lint": "eslint --fix --no-warn-ignored --max-warnings 0",
+    "test": "playwright test",
     "prepare": "husky",
     "create-migration-dev": "dotenvx run -f .env.development -- prisma migrate dev --name",
     "reset-db-dev": "dotenvx run -f .env.development -- prisma migrate reset"
@@ -40,6 +41,7 @@
   },
   "devDependencies": {
     "@eslint/eslintrc": "^3",
+    "@playwright/test": "^1.56.0",
     "@tailwindcss/postcss": "^4",
     "@types/js-cookie": "^3.0.6",
     "@types/node": "^22",
