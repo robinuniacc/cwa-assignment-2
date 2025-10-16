@@ -167,7 +167,6 @@ export default function EditableQuestionSprite({
   function onQuestionChange(newType: Question["type"]) {
     updateQuestion(question.id, {
       ...DEFAULT_QUESTIONS[newType],
-      id: question.id,
       position: question.position,
       prompt: localPrompt.map(
         (p) => ({ type: p.type, prompt: p.prompt }) as Prompt,

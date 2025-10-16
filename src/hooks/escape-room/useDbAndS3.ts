@@ -65,22 +65,21 @@ export default function useDbAndS3() {
   }, []);
 
   const initStateToRoomData = useCallback(async (currRoomId: string | null) => {
-    loadData(currRoomId).then((data) => {
-      const bgImgUrl = data.bgImgBlob
-        ? URL.createObjectURL(data.bgImgBlob)
-        : undefined;
+    const data = await loadData(currRoomId);
+    const bgImgUrl = data.bgImgBlob
+      ? URL.createObjectURL(data.bgImgBlob)
+      : undefined;
 
-      setBgImgUrl(bgImgUrl || null);
-      setQuestions(data.questions);
-      setImgSize(data.imgSize || { width: 0, height: 0 });
-      setRooms(data.rooms);
-      setTimeLimitMinutes(data.timeLimitMinutes || 5);
+    setBgImgUrl(bgImgUrl || null);
+    setQuestions(data.questions);
+    setImgSize(data.imgSize || { width: 0, height: 0 });
+    setRooms(data.rooms);
+    setTimeLimitMinutes(data.timeLimitMinutes || 5);
 
-      if (data.rooms.length > 0 && !currRoomId) {
-        setCurrRoomId(data.rooms[0].id);
-        initStateToRoomData(data.rooms[0].id);
-      }
-    });
+    if (data.rooms.length > 0 && !currRoomId) {
+      setCurrRoomId(data.rooms[0].id);
+      await initStateToRoomData(data.rooms[0].id);
+    }
   }, []);
 
   useEffect(() => {
