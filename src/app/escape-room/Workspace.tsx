@@ -129,7 +129,7 @@ export default function Workspace({
     newQuestionRef.current = newQuestion;
   }
   return (
-    <EditorContext.Provider
+    <EditorContext
       value={{
         deleteQuestion,
         updateQuestion: safeUpdateQuestion,
@@ -177,6 +177,6 @@ export default function Workspace({
           </div>
         </div>
       </div>
-    </EditorContext.Provider>
+    </EditorContext>
   );
 }

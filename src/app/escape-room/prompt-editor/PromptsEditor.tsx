@@ -76,7 +76,7 @@ export default function PromptEditor({
   );
 
   return (
-    <PromptEditorContext.Provider
+    <PromptEditorContext
       value={{
         onDelete: handleDeletePrompt,
         onChange: handleTextBasedPromptChange,
@@ -118,7 +118,7 @@ export default function PromptEditor({
           </DropdownMenuContent>
         </DropdownMenu>
       </div>
-    </PromptEditorContext.Provider>
+    </PromptEditorContext>
   );
 }
 
