@@ -82,7 +82,6 @@ export default function FITBQAnsEditor({
     const updateAnswers = () => {
       // Update the question's answers
       updateQuestion(question.id, {
-        ...question,
         answer: answers.map((a) => a.answer),
       });
     };

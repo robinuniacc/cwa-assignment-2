@@ -90,7 +90,6 @@ export default function MCQAnsEditor({
         choices[0].isCorrect = true;
       }
       updateQuestion(question.id, {
-        ...question,
         choices: choices.map((c) => ({ text: c.text, isCorrect: c.isCorrect })),
       });
     };

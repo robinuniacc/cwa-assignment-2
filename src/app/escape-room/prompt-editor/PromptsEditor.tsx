@@ -71,8 +71,7 @@ export default function PromptEditor({
         ),
       );
     },
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-    [prompt],
+    [prompt, setPrompt],
   );
 
   return (

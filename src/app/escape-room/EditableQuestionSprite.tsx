@@ -1,4 +1,4 @@
-import { useContext, useEffect, useRef, useState } from "react";
+import { useCallback, useContext, useEffect, useRef, useState } from "react";
 import {
   Select,
   SelectContent,
@@ -111,6 +111,14 @@ export default function EditableQuestionSprite({
   defaultOpen: boolean;
 }) {
   const onCloseListeners = useRef<(() => void)[]>([]);
+  const registerOnClose = useCallback((fn: () => void) => {
+    onCloseListeners.current.push(fn);
+  }, []);
+  const deregisterOnClose = useCallback((target: () => void) => {
+    onCloseListeners.current = onCloseListeners.current.filter(
+      (f) => f !== target,
+    );
+  }, []);
   const fireOnClose = useRef<() => void>(() => {
     onCloseListeners.current.forEach((f) => f());
   });
@@ -120,6 +128,7 @@ export default function EditableQuestionSprite({
     question.prompt.map((p) => ({ ...p, promptId: computePromptId(p) })),
   );
 
+  // Update answers to match blanks count for FITB questions
   useEffect(() => {
     if (question.type !== "fill-in-the-blanks") return;
     const blanksCt = computeBlanksCt(combineTextBasedPrompts(localPrompt));
@@ -133,15 +142,8 @@ export default function EditableQuestionSprite({
       while (newAns.length < blanksCt) newAns.push("a");
     }
 
-    updateQuestion(question.id, { ...question, answer: newAns });
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [localPrompt, question.id, question.type]);
-
-  useEffect(() => {
-    setLocalPrompt(
-      question.prompt.map((p) => ({ ...p, promptId: computePromptId(p) })),
-    );
-  }, [question.prompt]);
+    updateQuestion(question.id, { answer: newAns });
+  }, [localPrompt, question, question.id, question.type, updateQuestion]);
 
   useEffect(() => {
     const updatePrompt = () => {
@@ -151,14 +153,16 @@ export default function EditableQuestionSprite({
         ),
       });
     };
-    onCloseListeners.current.push(updatePrompt);
 
-    return () => {
-      onCloseListeners.current = onCloseListeners.current.filter(
-        (f) => f !== updatePrompt,
-      );
-    };
-  }, [localPrompt, question.id, updateQuestion]);
+    registerOnClose(updatePrompt);
+    return () => deregisterOnClose(updatePrompt);
+  }, [
+    localPrompt,
+    question.id,
+    registerOnClose,
+    deregisterOnClose,
+    updateQuestion,
+  ]);
 
   function onQuestionChange(newType: Question["type"]) {
     updateQuestion(question.id, {
@@ -191,12 +195,8 @@ export default function EditableQuestionSprite({
       </Select>
       <PromptsEditor prompt={localPrompt} setPrompt={setLocalPrompt} />
       {renderAnswerEditor(question, {
-        registerOnClose: (f) => onCloseListeners.current.push(f),
-        deregisterOnClose: (target: () => void) => {
-          onCloseListeners.current = onCloseListeners.current.filter(
-            (f) => f !== target,
-          );
-        },
+        registerOnClose: registerOnClose,
+        deregisterOnClose: deregisterOnClose,
       })}
     </BaseSprite>
   );

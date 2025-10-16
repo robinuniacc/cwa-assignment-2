@@ -17,9 +17,7 @@ export default function Workspace({
   setImgSize,
 }: {
   questions: Question[];
-  setQuestions:
-    | React.Dispatch<React.SetStateAction<Question[]>>
-    | ((qs: Question[]) => void);
+  setQuestions: React.Dispatch<React.SetStateAction<Question[]>>;
   bgImgUrl: string;
   imgSize: { width: number; height: number };
   setImgSize:
@@ -93,22 +91,23 @@ export default function Workspace({
     setQuestions(questions.filter((q) => q.id !== id));
   }
 
-  function safeUpdateQuestion(id: string, updated: Partial<Question>): boolean {
+  function safeUpdateQuestion(id: string, updated: Partial<Question>) {
     // Prevent empty IDs
     if (updated.id && updated.id === "") {
-      return false;
+      return;
     }
 
-    const newQs = questions.map((q) =>
-      q.id === id ? ({ ...q, ...updated } as Question) : q,
-    );
+    setQuestions((questions) => {
+      const newQs = questions.map((q) =>
+        q.id === id ? ({ ...q, ...updated } as Question) : q,
+      );
+      // Ensure no duplicate IDs
+      const ids = new Set(newQs.map((q) => q.id));
+      if (ids.size !== newQs.length) return questions;
 
-    // Ensure no duplicate IDs
-    const ids = new Set(newQs.map((q) => q.id));
-    if (ids.size !== newQs.length) return false;
-
-    setQuestions(newQs);
-    return true;
+      console.log("old to new qs", newQs, updated);
+      return newQs;
+    });
   }
 
   function handleCanvasClick(

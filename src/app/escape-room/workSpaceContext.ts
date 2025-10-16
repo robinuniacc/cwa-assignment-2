@@ -3,10 +3,13 @@ import { Question } from "./typings";
 
 const EditorContext = createContext<{
   deleteQuestion: (id: string) => void;
-  updateQuestion: (id: string, updated: Partial<Question>) => boolean;
+  updateQuestion: (
+    id: string,
+    updated: Partial<Question>,
+  ) => void | React.Dispatch<React.SetStateAction<Question[]>>;
 }>({
   deleteQuestion: () => {},
-  updateQuestion: () => false,
+  updateQuestion: () => {},
 });
 
 export { EditorContext };
