@@ -12,13 +12,21 @@ const LAMBDA_CLIENT = new LambdaClient({
 });
 
 export async function POST(request: Request) {
-  const { questions, bgImgBase64, bgImgMimeType, bgImgSize } =
-    (await request.json()) as {
-      questions: Question[];
-      bgImgBase64: string | null;
-      bgImgMimeType: string;
-      bgImgSize: { width: number; height: number } | null;
-    };
+  const {
+    roomId,
+    questions,
+    bgImgBase64,
+    bgImgMimeType,
+    bgImgSize,
+    timeLimitMinutes,
+  } = (await request.json()) as {
+    roomId: string;
+    questions: Question[];
+    bgImgBase64: string | null;
+    bgImgMimeType: string;
+    bgImgSize: { width: number; height: number } | null;
+    timeLimitMinutes: number;
+  };
   if (!questions || !Array.isArray(questions) || questions.length === 0) {
     return new Response("Invalid questions data", { status: 400 });
   }
@@ -33,10 +41,12 @@ export async function POST(request: Request) {
   }
 
   const reqPayload = JSON.stringify({
+    roomId,
     questions,
     bgImgBase64,
     bgImgSize,
     bgImgMimeType,
+    timeLimitMinutes,
   });
 
   const invokeCommand = new InvokeCommand({
@@ -45,12 +55,22 @@ export async function POST(request: Request) {
     InvocationType: "RequestResponse",
   });
 
-  const { StatusCode, FunctionError } = await LAMBDA_CLIENT.send(invokeCommand);
+  const { StatusCode, FunctionError, Payload } =
+    await LAMBDA_CLIENT.send(invokeCommand);
 
   if (StatusCode !== 200) {
     console.error("Lambda invocation failed", { StatusCode, FunctionError });
     return new Response("Failed to generate preview", { status: 500 });
   }
 
-  return new Response(null, { status: 204 });
+  const responsePayload = Payload ? Buffer.from(Payload).toString() : null;
+  if (!responsePayload) {
+    console.error("Lambda response payload is empty");
+    return new Response("Failed to generate preview", { status: 500 });
+  }
+
+  return new Response(JSON.parse(responsePayload).url!, {
+    status: 200,
+    headers: { "Content-Type": "text/plain" },
+  });
 }
