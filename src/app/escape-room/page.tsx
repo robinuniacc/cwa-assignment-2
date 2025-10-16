@@ -2,11 +2,7 @@
 import Workspace from "./Workspace";
 import useDbAndS3 from "@/hooks/escape-room/useDbAndS3";
 import { useEffect } from "react";
-import Toolbar, {
-  ChooseImagePanel,
-  InstructionsDialog,
-  UseDefaultImgButton,
-} from "./Toolbar";
+import Toolbar, { UseDefaultImgButton } from "./Toolbar";
 
 async function computeInstrinsicImgSize(blob: Blob) {
   const bitmap = await createImageBitmap(blob);
@@ -18,7 +14,6 @@ export default function EscapeRoomPage() {
   const {
     rooms,
     setRooms,
-    currRoomId,
     setCurrRoomId,
     bgImgUrl,
     questions,
@@ -28,7 +23,6 @@ export default function EscapeRoomPage() {
     isRestoring,
     imgSize,
     setImgSize,
-    save,
   } = store;
 
   useEffect(() => {

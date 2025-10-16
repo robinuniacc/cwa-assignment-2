@@ -1,10 +1,4 @@
-import {
-  SetStateAction,
-  useCallback,
-  useEffect,
-  useRef,
-  useState,
-} from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { Question } from "@/app/escape-room/typings";
 import {
   addOrUpdateRoom,

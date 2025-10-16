@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-require-imports */
 const s3 = require("@aws-sdk/client-s3");
 
 const BUCKET_NAME = "cwa-assignment-2";
@@ -72,7 +73,7 @@ function parseBody(event) {
   };
 }
 
-exports.handler = async (event, context) => {
+exports.handler = async (event) => {
   const parsedBody = parseBody(event);
 
   if (parsedBody.statusCode >= 400) {
