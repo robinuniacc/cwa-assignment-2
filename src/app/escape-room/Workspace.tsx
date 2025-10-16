@@ -1,6 +1,6 @@
 "use client";
 
-import { useRef, MouseEvent as ReactMouseEvent, useState } from "react";
+import { useRef, MouseEvent as ReactMouseEvent } from "react";
 import Image from "next/image";
 import { Question } from "./typings";
 import { cn } from "@/lib/utils";
@@ -25,9 +25,6 @@ export default function Workspace({
     | ((size: { width: number; height: number }) => void);
 }) {
   const canvasRef = useRef<HTMLDivElement>(null);
-  const [highlightedQuestionId, setHighlightedQuestionId] = useState<
-    string | null
-  >(null);
   const newQuestionRef = useRef<Question | null>(null);
 
   const resizingRef = useRef(false);
@@ -98,9 +95,28 @@ export default function Workspace({
     }
 
     setQuestions((questions) => {
-      const newQs = questions.map((q) =>
-        q.id === id ? ({ ...q, ...updated } as Question) : q,
-      );
+      const newQs = questions.map((q) => {
+        if (q.id !== id) return q;
+
+        if (
+          updated.type &&
+          q.type === "multiple-choice" &&
+          updated.type !== "short-answer"
+        ) {
+          // eslint-disable-next-line @typescript-eslint/no-unused-vars
+          const { choices, ...rest } = q;
+          return { ...rest, ...updated } as Question;
+        } else if (
+          updated.type &&
+          q.type !== "multiple-choice" &&
+          updated.type === "multiple-choice"
+        ) {
+          // eslint-disable-next-line @typescript-eslint/no-unused-vars
+          const { answer, ...rest } = q;
+          return { ...rest, ...updated } as Question;
+        }
+        return { ...q, ...updated } as Question;
+      });
       // Ensure no duplicate IDs
       const ids = new Set(newQs.map((q) => q.id));
       if (ids.size !== newQs.length) return questions;
@@ -170,7 +186,7 @@ export default function Workspace({
                 key={q.id}
                 question={q}
                 defaultOpen={newQuestionRef.current?.id === q.id}
-                isHighlighted={highlightedQuestionId === q.id}
+                isHighlighted={false}
               />
             ))}
           </div>
