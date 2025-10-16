@@ -8,6 +8,16 @@ datasource db {
     url      = env("ESCAPE_ROOM_DATABASE_URL")
 }
 
+model rooms {
+    id               String @id @default(uuid()) @db.Uuid
+    name             String
+    bgImgWidth       Int
+    bgImgHeight      Int
+    timeLimitMinutes Int    @default(5)
+
+    questions questions[]
+}
+
 model fill_in_the_blanks_answers {
     id          String                       @id @default(uuid()) @db.Uuid
     question_id String                       @db.Uuid
@@ -55,6 +65,8 @@ model prompts {
 
 model questions {
     id                           String                        @id @db.Uuid
+    room_id                      String                        @db.Uuid
+    room                         rooms                         @relation(fields: [room_id], references: [id], onDelete: Cascade)
     type                         question_type
     center_x                     Int
     center_y                     Int

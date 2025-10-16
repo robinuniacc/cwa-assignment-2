@@ -3,64 +3,11 @@
 import { useRef, MouseEvent as ReactMouseEvent, useState } from "react";
 import Image from "next/image";
 import { Question } from "./typings";
-import { cn, limitStrLen } from "@/lib/utils";
+import { cn } from "@/lib/utils";
 import { EditorContext } from "./workSpaceContext";
 import EditableQuestionSprite, {
   DEFAULT_QUESTIONS,
 } from "./EditableQuestionSprite";
-
-function QuestionsPanelEntry({
-  q,
-  setHighlightedQuestionId,
-  className,
-}: {
-  q: Question;
-  setHighlightedQuestionId: React.Dispatch<React.SetStateAction<string | null>>;
-  className?: string;
-}) {
-  return (
-    <button
-      key={q.id}
-      className={cn(
-        "text-left min-w-full border p-2 mb-2 rounded hover:cursor-pointer",
-        className,
-      )}
-      onClick={() => setHighlightedQuestionId(q.id)}
-    >
-      <p>Type: {q.type}</p>
-      <p>Q: {limitStrLen(q.prompt.map((p) => p.prompt).join(" "), 32)}</p>
-    </button>
-  );
-}
-
-function QuestionsPanel({
-  questions,
-  className,
-  highlightedQuestionId,
-  setHighlightedQuestionId,
-}: {
-  questions: Question[];
-  className?: string;
-  highlightedQuestionId: string | null;
-  setHighlightedQuestionId: React.Dispatch<React.SetStateAction<string | null>>;
-}) {
-  return (
-    <div className={cn(className)}>
-      {questions.map((q) => (
-        <QuestionsPanelEntry
-          key={q.id}
-          q={q}
-          className={
-            highlightedQuestionId == q.id
-              ? "border-[var(--color-red-latrobe)] border-2"
-              : ""
-          }
-          setHighlightedQuestionId={setHighlightedQuestionId}
-        />
-      ))}
-    </div>
-  );
-}
 
 export default function Workspace({
   questions,
@@ -68,16 +15,16 @@ export default function Workspace({
   bgImgUrl,
   imgSize,
   setImgSize,
-  isQuestionsPanelOpen,
 }: {
   questions: Question[];
-  setQuestions: React.Dispatch<React.SetStateAction<Question[]>>;
+  setQuestions:
+    | React.Dispatch<React.SetStateAction<Question[]>>
+    | ((qs: Question[]) => void);
   bgImgUrl: string;
-  isQuestionsPanelOpen: boolean;
   imgSize: { width: number; height: number };
-  setImgSize: React.Dispatch<
-    React.SetStateAction<{ width: number; height: number }>
-  >;
+  setImgSize:
+    | React.Dispatch<React.SetStateAction<{ width: number; height: number }>>
+    | ((size: { width: number; height: number }) => void);
 }) {
   const canvasRef = useRef<HTMLDivElement>(null);
   const [highlightedQuestionId, setHighlightedQuestionId] = useState<
@@ -229,12 +176,6 @@ export default function Workspace({
             ))}
           </div>
         </div>
-        <QuestionsPanel
-          questions={questions}
-          className={cn(isQuestionsPanelOpen ? "block" : "hidden", "w-1/4")}
-          highlightedQuestionId={highlightedQuestionId}
-          setHighlightedQuestionId={setHighlightedQuestionId}
-        />
       </div>
     </EditorContext.Provider>
   );

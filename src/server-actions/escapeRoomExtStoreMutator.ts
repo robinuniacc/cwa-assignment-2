@@ -8,25 +8,84 @@ import {
   TrueFalseQuestion,
 } from "@/app/escape-room/typings";
 import {
+  DeleteObjectCommand,
   GetObjectCommand,
+  ListObjectsV2Command,
   NoSuchKey,
   PutObjectCommand,
   S3Client,
 } from "@aws-sdk/client-s3";
-import { imageSize } from "image-size";
 
 const S3_CLIENT = new S3Client({});
-const S3_GET_OBJ_CMD = new GetObjectCommand({
-  Bucket: process.env.NEXT_PUBLIC_S3_BUCKET_NAME!,
-  Key: `${process.env.NEXT_PUBLIC_S3_PREFIX_UNFINISHED_ROOMS!}/bgimg`,
-});
+const getRoomBgImgKey = (roomId: string) =>
+  `${process.env.NEXT_PUBLIC_S3_PREFIX_UNFINISHED_ROOMS!}/${roomId}/bgimg`;
+
+function makeS3GetbgImgForRoom(roomId: string) {
+  return new GetObjectCommand({
+    Bucket: process.env.NEXT_PUBLIC_S3_BUCKET_NAME!,
+    Key: getRoomBgImgKey(roomId),
+  });
+}
 
 function convertTSQuestionTypeToDBType(type: Question["type"]): DBQuestionType {
   return type.replace(/-/g, "_") as DBQuestionType;
 }
 
-async function clearDB() {
-  await prisma.questions.deleteMany();
+async function deleteAllQuestionsInRoomInDB(roomId: string) {
+  await prisma.questions.deleteMany({
+    where: { room_id: roomId },
+  });
+}
+
+async function deleteRoom(roomId: string) {
+  // Remove room resources from S3
+  const listObjsUnfin = await S3_CLIENT.send(
+    new ListObjectsV2Command({
+      Bucket: process.env.NEXT_PUBLIC_S3_BUCKET_NAME!,
+      Prefix: process.env.NEXT_PUBLIC_S3_PREFIX_UNFINISHED_ROOMS,
+    }),
+  );
+  const listObjsFin = await S3_CLIENT.send(
+    new ListObjectsV2Command({
+      Bucket: process.env.NEXT_PUBLIC_S3_BUCKET_NAME!,
+      Prefix: process.env.NEXT_PUBLIC_S3_PREFIX_FINISHED_ROOMS,
+    }),
+  );
+
+  const objs = [
+    ...(listObjsUnfin.Contents || []),
+    ...(listObjsFin.Contents || []),
+  ];
+
+  for (const obj of objs) {
+    if (!obj.Key) continue;
+    await S3_CLIENT.send(
+      new DeleteObjectCommand({
+        Bucket: process.env.NEXT_PUBLIC_S3_BUCKET_NAME!,
+        Key: obj.Key,
+      }),
+    );
+  }
+
+  // Remove room and all its questions from db
+  await prisma.rooms.delete({
+    where: { id: roomId },
+  });
+}
+
+async function addOrUpdateRoom(room: { id: string; name: string }) {
+  await prisma.rooms.upsert({
+    where: { id: room.id },
+    create: {
+      id: room.id,
+      name: room.name,
+      bgImgWidth: 0,
+      bgImgHeight: 0,
+    },
+    update: {
+      name: room.name,
+    },
+  });
 }
 
 function extractCriticalDBQIntoTSQ<T>(
@@ -49,7 +108,28 @@ function extractCriticalDBQIntoTSQ<T>(
   };
 }
 
-async function loadData() {
+async function loadData(roomId: string | null) {
+  const rooms = await prisma.rooms.findMany({});
+
+  const room = roomId
+    ? await prisma.rooms.findFirst({
+        where: { id: roomId },
+        include: { questions: true },
+      })
+    : null;
+
+  if (!room) {
+    return {
+      questions: [],
+      bgImgBlob: null,
+      imgSize: { width: 0, height: 0 },
+      rooms: rooms,
+      timeLimitMinutes: 5,
+    };
+  }
+
+  const questionIds = room.questions.map((q) => q.id);
+
   const stdQuery = {
     omit: { question_id: true },
     include: {
@@ -62,10 +142,17 @@ async function loadData() {
         },
       },
     },
+    where: {
+      question_id: {
+        in: questionIds,
+      },
+    },
   };
 
   const shortAnsQs = (
-    await prisma.short_answer_questions.findMany({ ...stdQuery })
+    await prisma.short_answer_questions.findMany({
+      ...stdQuery,
+    })
   ).map((q) => {
     return {
       ...extractCriticalDBQIntoTSQ(q),
@@ -130,7 +217,7 @@ async function loadData() {
 
   let obj;
   try {
-    obj = await S3_CLIENT.send(S3_GET_OBJ_CMD);
+    obj = await S3_CLIENT.send(makeS3GetbgImgForRoom(room.id));
   } catch (e) {
     if (e instanceof NoSuchKey) {
       obj = {};
@@ -139,58 +226,71 @@ async function loadData() {
     }
   }
 
-  let imgDims;
   let bgImgBlob;
   if (obj.Body) {
     const arr = await obj.Body.transformToByteArray();
-    imgDims = imageSize(arr);
     bgImgBlob = new Blob([new Uint8Array(arr)], {
       type: obj.ContentType || undefined,
     });
   }
 
   return {
+    room,
+    rooms,
     questions: [...shortAnsQs, ...mcQs, ...fitbQs, ...tfQs],
+    timeLimitMinutes: room.timeLimitMinutes,
     bgImgBlob: bgImgBlob,
-    imgSize: imgDims
-      ? { width: imgDims.width, height: imgDims.height }
-      : { width: 0, height: 0 },
+    imgSize: { width: room.bgImgWidth, height: room.bgImgHeight },
   };
 }
 
 async function saveData(latestData: {
+  room: { id: string; name: string };
+  timeLimitMinutes: number;
   bgImgBlob: Blob | null;
   questions: Question[];
   imgSize: { width: number; height: number };
 }) {
-  // Save image to S3 and image size
+  // Save image to S3 and image size to db
   if (latestData.bgImgBlob) {
     await S3_CLIENT.send(
       new PutObjectCommand({
         Bucket: process.env.NEXT_PUBLIC_S3_BUCKET_NAME!,
-        Key: `${process.env.NEXT_PUBLIC_S3_PREFIX_UNFINISHED_ROOMS!}/bgimg`,
+        Key: getRoomBgImgKey(latestData.room.id),
         Body: Buffer.from(await latestData.bgImgBlob.arrayBuffer()),
         ContentType: latestData.bgImgBlob.type || "",
       }),
     );
   }
 
+  await prisma.rooms.upsert({
+    where: { id: latestData.room.id },
+    create: {
+      id: latestData.room.id,
+      name: latestData.room.name,
+      bgImgWidth: latestData.imgSize.width,
+      bgImgHeight: latestData.imgSize.height,
+      timeLimitMinutes: latestData.timeLimitMinutes,
+    },
+    update: {
+      name: latestData.room.name,
+      bgImgWidth: latestData.imgSize.width,
+      bgImgHeight: latestData.imgSize.height,
+      timeLimitMinutes: latestData.timeLimitMinutes,
+    },
+  });
+
   // Save questions to postgres
-  await clearDB();
+  await deleteAllQuestionsInRoomInDB(latestData.room.id);
 
   for (const q of latestData.questions) {
-    await prisma.questions.upsert({
-      where: { id: q.id },
-      update: {
-        center_x: q.position.centerX,
-        center_y: q.position.centerY,
-        type: convertTSQuestionTypeToDBType(q.type),
-      },
-      create: {
+    await prisma.questions.create({
+      data: {
         id: q.id,
-        type: convertTSQuestionTypeToDBType(q.type),
         center_x: q.position.centerX,
         center_y: q.position.centerY,
+        type: convertTSQuestionTypeToDBType(q.type),
+        room_id: latestData.room.id,
       },
     });
 
@@ -209,17 +309,18 @@ async function saveData(latestData: {
 
     if (q.type === "short-answer") {
       const saq = q as ShortAnswerQuestion;
-      await prisma.short_answer_questions.upsert({
-        where: { question_id: q.id },
-        create: { question_id: q.id, answer: saq.answer },
-        update: { answer: saq.answer },
+      await prisma.short_answer_questions.create({
+        data: {
+          question_id: q.id,
+          answer: saq.answer,
+        },
       });
     } else if (q.type === "multiple-choice") {
       const mcq = q as MultipleChoiceQuestion;
-      await prisma.multiple_choice_questions.upsert({
-        where: { question_id: q.id },
-        create: { question_id: q.id },
-        update: {},
+      await prisma.multiple_choice_questions.create({
+        data: {
+          question_id: q.id,
+        },
       });
 
       for (const c of mcq.choices) {
@@ -233,10 +334,8 @@ async function saveData(latestData: {
       }
     } else if (q.type === "fill-in-the-blanks") {
       const fitbq = q as FillInTheBlanksQuestion;
-      await prisma.fill_in_the_blanks_questions.upsert({
-        where: { question_id: q.id },
-        create: { question_id: q.id },
-        update: {},
+      await prisma.fill_in_the_blanks_questions.create({
+        data: { question_id: q.id },
       });
 
       for (let idx = 0; idx < fitbq.answer.length; idx++) {
@@ -251,13 +350,11 @@ async function saveData(latestData: {
       }
     } else if (q.type === "true-false") {
       const tfq = q as TrueFalseQuestion;
-      await prisma.true_false_questions.upsert({
-        where: { question_id: q.id },
-        create: { question_id: q.id, answer: tfq.answer },
-        update: { answer: tfq.answer },
+      await prisma.true_false_questions.create({
+        data: { question_id: q.id, answer: tfq.answer },
       });
     }
   }
 }
 
-export { loadData, saveData };
+export { loadData, saveData, deleteRoom, addOrUpdateRoom };

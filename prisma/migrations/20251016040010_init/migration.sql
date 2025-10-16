@@ -5,6 +5,17 @@ CREATE TYPE "prompt_type" AS ENUM ('text', 'code', 'newline');
 CREATE TYPE "question_type" AS ENUM ('short_answer', 'multiple_choice', 'true_false', 'fill_in_the_blanks');
 
 -- CreateTable
+CREATE TABLE "rooms" (
+    "id" UUID NOT NULL,
+    "name" TEXT NOT NULL,
+    "bgImgWidth" INTEGER NOT NULL,
+    "bgImgHeight" INTEGER NOT NULL,
+    "timeLimitMinutes" INTEGER NOT NULL DEFAULT 5,
+
+    CONSTRAINT "rooms_pkey" PRIMARY KEY ("id")
+);
+
+-- CreateTable
 CREATE TABLE "fill_in_the_blanks_answers" (
     "id" UUID NOT NULL,
     "question_id" UUID NOT NULL,
@@ -52,6 +63,7 @@ CREATE TABLE "prompts" (
 -- CreateTable
 CREATE TABLE "questions" (
     "id" UUID NOT NULL,
+    "room_id" UUID NOT NULL,
     "type" "question_type" NOT NULL,
     "center_x" INTEGER NOT NULL,
     "center_y" INTEGER NOT NULL,
@@ -107,6 +119,9 @@ ALTER TABLE "multiple_choice_questions" ADD CONSTRAINT "multiple_choice_question
 
 -- AddForeignKey
 ALTER TABLE "prompts" ADD CONSTRAINT "prompts_question_id_fkey" FOREIGN KEY ("question_id") REFERENCES "questions"("id") ON DELETE CASCADE ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE "questions" ADD CONSTRAINT "questions_room_id_fkey" FOREIGN KEY ("room_id") REFERENCES "rooms"("id") ON DELETE CASCADE ON UPDATE CASCADE;
 
 -- AddForeignKey
 ALTER TABLE "short_answer_questions" ADD CONSTRAINT "short_answer_questions_question_id_fkey" FOREIGN KEY ("question_id") REFERENCES "questions"("id") ON DELETE CASCADE ON UPDATE CASCADE;
