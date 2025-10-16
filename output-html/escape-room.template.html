@@ -165,7 +165,7 @@
     <!-- Primitives -->
     <script>
             const QUESTION_SPRITE_SIZE = 32;
-            const TIME_GIVEN_SECONDS = 60 * 60;
+            const TIME_GIVEN_SECONDS = {{timeLimitMinutes}} * 60;
 
             const QUESTIONS = {{questions}};
             const HTML_MODAL_TEMPLATES = {
@@ -299,7 +299,9 @@
 
         const minutes = Math.floor(timeLeftSeconds / 60);
         const seconds = timeLeftSeconds % 60;
-        timerElement.textContent = `${minutes.toString().padStart(2, "0")}:${seconds.toString().padStart(2, "0")}`;
+        timerElement.textContent = `${minutes
+          .toString()
+          .padStart(2, "0")}:${seconds.toString().padStart(2, "0")}`;
         if (timeLeftSeconds <= 0) {
           clearInterval(timerInterval);
           openModal("<p>Time is up!</p>");
@@ -511,7 +513,7 @@
         let isCorrect = true;
         for (const c of question.choices) {
           if (!c.isCorrect) continue;
-          if (!userChoices.includes(c.choice)) {
+          if (!userChoices.includes(c.text)) {
             isCorrect = false;
             break;
           }
@@ -732,7 +734,7 @@
               choicesHtml += renderHTMLTemplate(
                 HTML_MODAL_TEMPLATES["multiple-choice"].choice,
                 {
-                  choice: he.encode(choice.choice),
+                  choice: he.encode(choice.text),
                 },
               );
             });
