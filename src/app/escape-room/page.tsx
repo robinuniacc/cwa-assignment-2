@@ -1,15 +1,165 @@
 "use client";
-import { useState } from "react";
 import Workspace from "./Workspace";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
-import { faTrash } from "@fortawesome/free-solid-svg-icons";
+import {
+  faCaretDown,
+  faEdit,
+  faTrash,
+} from "@fortawesome/free-solid-svg-icons";
 import {
   Dialog,
+  DialogClose,
   DialogContent,
   DialogTitle,
   DialogTrigger,
 } from "../components/shadcn/dialog";
 import useDbAndS3 from "@/hooks/escape-room/useDbAndS3";
+import useBrowserStorage from "@/hooks/escape-room/useBrowserStorage";
+import { useEffect, useRef, useState } from "react";
+import { limitStrLen } from "@/lib/utils";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuTrigger,
+} from "../components/shadcn/dropdown-menu";
+
+function RoomSelector({
+  rooms,
+  setRooms,
+  currRoomId,
+  setCurrRoomId,
+}: {
+  rooms: { id: string; name: string }[];
+  setRooms: (rooms: { id: string; name: string }[]) => void;
+  currRoomId: string;
+  setCurrRoomId: (id: string) => void;
+}) {
+  const newRoomNameInputRef = useRef<HTMLInputElement>(null);
+  const editRoomNameInputRef = useRef<HTMLInputElement>(null);
+  const LIMIT_ROOM_NAME_LEN = 20;
+
+  const [isModalOpen, setIsModalOpen] = useState(false);
+
+  function updateRoomName(roomId: string, newName: string) {
+    setRooms(rooms.map((r) => (r.id === roomId ? { ...r, name: newName } : r)));
+  }
+
+  function deleteRoom(roomId: string) {
+    if (rooms.length === 1 || currRoomId === roomId) return;
+
+    setIsModalOpen(false);
+    setRooms(rooms.filter((r) => r.id !== roomId));
+  }
+
+  function submitCreateNewRoom() {
+    const roomId = crypto.randomUUID();
+    setRooms([
+      ...rooms,
+      {
+        id: roomId,
+        name: newRoomNameInputRef.current!.value,
+      },
+    ]);
+  }
+
+  return (
+    <>
+      Room:
+      <DropdownMenu open={isModalOpen} onOpenChange={setIsModalOpen}>
+        <DropdownMenuTrigger className="border-1 px-2 py-2 text-left justify-between">
+          <div>
+            <span>
+              {limitStrLen(
+                rooms.find((r) => r.id === currRoomId)?.name || "",
+                LIMIT_ROOM_NAME_LEN,
+              ) || "Select Room"}
+            </span>
+            <FontAwesomeIcon icon={faCaretDown} className="h-4 w-4 ml-2" />
+          </div>
+        </DropdownMenuTrigger>
+        <DropdownMenuContent className="bg-background">
+          <ul>
+            {rooms.map((room) => (
+              <li key={room.id} className="flex px-2 py-1">
+                <button
+                  onClick={() => {
+                    setCurrRoomId(room.id);
+                    setIsModalOpen(false);
+                  }}
+                  className="w-full text-left hover:opacity-80 hover:cursor-pointer"
+                >
+                  {limitStrLen(room.name, LIMIT_ROOM_NAME_LEN)}
+                </button>
+
+                <Dialog>
+                  <DialogTrigger>
+                    <FontAwesomeIcon
+                      icon={faEdit}
+                      className="h-4 w-4 hover:cursor-pointer hover:opacity-80 mr-1"
+                    />
+                  </DialogTrigger>
+                  <DialogContent>
+                    <DialogTitle>Edit Room Name</DialogTitle>
+                    <input
+                      type="text"
+                      defaultValue={room.name}
+                      ref={editRoomNameInputRef}
+                    />
+                    <DialogClose asChild>
+                      <button
+                        title="Submit New Room Name"
+                        className="text-center relative ml-auto mr-auto mt-1 bg-[var(--color-red-latrobe)] text-white rounded hover:cursor-pointer hover:opacity-80 px-2 py-1"
+                        onClick={() =>
+                          updateRoomName(
+                            room.id,
+                            editRoomNameInputRef.current!.value,
+                          )
+                        }
+                      >
+                        Submit
+                      </button>
+                    </DialogClose>
+                  </DialogContent>
+                </Dialog>
+
+                <button>
+                  <FontAwesomeIcon
+                    icon={faTrash}
+                    className="h-4 w-4 text-[var(--color-red-latrobe)] hover:cursor-pointer hover:opacity-80"
+                    onClick={() => deleteRoom(room.id)}
+                  />
+                </button>
+              </li>
+            ))}
+          </ul>
+          <Dialog>
+            <DialogTrigger asChild>
+              <button
+                type="button"
+                title="Create New Room"
+                className="text-center w-full bg-[var(--color-red-latrobe)] text-white rounded hover:cursor-pointer hover:opacity-80 px-2 py-1 my-1"
+              >
+                Create New Room
+              </button>
+            </DialogTrigger>
+            <DialogContent>
+              <DialogTitle>Create New Room</DialogTitle>
+              <input type="text" ref={newRoomNameInputRef} />
+              <DialogClose asChild>
+                <button
+                  onClick={() => submitCreateNewRoom()}
+                  className="text-center relative ml-auto mr-auto mt-1 bg-[var(--color-red-latrobe)] text-white rounded hover:cursor-pointer hover:opacity-80 px-2 py-1"
+                >
+                  Submit
+                </button>
+              </DialogClose>
+            </DialogContent>
+          </Dialog>
+        </DropdownMenuContent>
+      </DropdownMenu>
+    </>
+  );
+}
 
 function InstructionsDialog() {
   return (
@@ -70,17 +220,29 @@ async function computeInstrinsicImgSize(blob: Blob) {
 }
 
 export default function EscapeRoomPage() {
-  const [isQuestionsPanelOpen, setIsQuestionsPanelOpen] = useState(false);
   const {
+    rooms,
+    setRooms,
+    currRoomId,
+    setCurrRoomId,
     bgImgUrl,
     questions,
     setQuestions,
     setBgImgUrl,
     hasAttemptedRestore,
+    isRestoring,
     imgSize,
     setImgSize,
     save,
   } = useDbAndS3();
+
+  useEffect(() => {
+    if (!hasAttemptedRestore || isRestoring || rooms.length > 0) return;
+
+    const newRoomId = crypto.randomUUID();
+    setRooms([{ id: newRoomId, name: "My First Room" }]);
+    setCurrRoomId(newRoomId);
+  }, [hasAttemptedRestore, isRestoring, rooms, setCurrRoomId, setRooms]);
 
   async function handleBgImgChange(newImgUrl: string) {
     const imgBlob = await fetch(newImgUrl).then((r) => r.blob());
@@ -151,6 +313,12 @@ export default function EscapeRoomPage() {
       {bgImgUrl && (
         <div className="flex flex-col items-center">
           <div className="w-full flex justify-center items-center mb-2 gap-2 text-sm">
+            <RoomSelector
+              rooms={rooms}
+              setRooms={setRooms}
+              currRoomId={currRoomId}
+              setCurrRoomId={setCurrRoomId}
+            />
             <form>
               <label>Time</label>
               <input
@@ -168,14 +336,6 @@ export default function EscapeRoomPage() {
             >
               <FontAwesomeIcon icon={faTrash} className="h-5 w-5" />
               Delete Image
-            </button>
-            <button
-              type="button"
-              onClick={() => setIsQuestionsPanelOpen(!isQuestionsPanelOpen)}
-              className="flex items-center gap-1 px-3 py-1.5 bg-[var(--color-red-latrobe)] text-white rounded hover:cursor-pointer hover:opacity-80"
-              title="Find-question Panel"
-            >
-              Find-Question Panel
             </button>
             <UseDefaultImgButton
               handleBgImgChange={handleBgImgChange}
@@ -203,7 +363,6 @@ export default function EscapeRoomPage() {
             bgImgUrl={bgImgUrl}
             questions={questions}
             setQuestions={setQuestions}
-            isQuestionsPanelOpen={isQuestionsPanelOpen}
             imgSize={imgSize}
             setImgSize={setImgSize}
           />
