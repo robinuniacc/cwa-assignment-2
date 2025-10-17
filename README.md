@@ -47,13 +47,101 @@ Follow these steps to set up and run the project locally:
    npm run lint
    ```
 
-I try to build the app as scalable as possible. It's very easy to just code, code, code to meet the requirements.
+## Addtional steps for the escape room
 
-Since this project seems somewhat exciting, I took on the challenge of making it scalable.
+To save your progress of the escape room builder (not the escape room itself), you have 2 choices: use browser storage or use cloud storage.
+
+If you'd like to use local storage, go to `src/app/escape-room/page.tsx`, replace ` = useDbAndS3()` with ` = useBrowserStorage()`, and add the missing import.
+
+Regardless of which one you choose, the actual playable escape room is still hosted on S3 that needs to be configured like so:
+
+### Modify the max limit size in server actions in `next.config.ts`
+
+Set this to a slight positive offset of the max image size you're planning to use.
+
+For instance, if you're planning to use image up to "8mb", set the config to slightly higher, say "10mb".
+
+### Create an S3 bucket
+
+Make sure you have an S3 bucket with 3 folders: /res, /finished, /unfinished.
+
+- The `/res` folder is used to store your resources shared by all escape rooms. Currently, it hosts the question sprite icons.
+
+  It's assumed the path of the sprite is "/question-mark.png" for questions answered incorrectly, and "/question-mark-green.png" for questions answered correctly.
+
+- The `/finished` folder is used to store escape rooms that are finished and playable.
+- The `/unfinished` folder is used to store escape rooms to save progress of escape room builders.
+
+Then, go to the `Permissions` tab of your bucket and disable all 4 checkboxes in `Block public access (bucket settings)`.
+
+Finally, scroll down to the `Bucket policy` SECTION, and paste this in (replacing `BUCKET_NAME` with the name of your bucket):
+
+```
+{
+    "Version": "2012-10-17",
+    "Statement": [
+        {
+            "Sid": "Allow Public Read-Only to /res & /finished",
+            "Effect": "Allow",
+            "Principal": "*",
+            "Action": "s3:GetObject",
+            "Resource": [
+                "arn:aws:s3:::BUCKET_NAME/res/*",
+                "arn:aws:s3:::BUCKET_NAME/finished/*"
+            ]
+        }
+    ]
+}
+```
+
+### Create a Lambda function
+
+Create a lambda function with at least >=128MB of memory and node.js v22+.
+
+In VSCode, navigate to the `src/app/escape-room/lambda-ready` folder, run `npm i`, zip the folder, go back to the lambda function page, click `Upload from`, select `.zip file`, and upload the zip file to the lambda function.
+
+Then, edit the role of your lambda function by heading to the `Configuration` tab, and follow the hyperlink to the lambda role. This link is quite small and usually looks something like `YOUR_LAMBDA_FUNCTION_NAME-fdvxz14rkc`. Click `Add permissions` and select `Attach policies`. Look for `AmazonS3FullAcess`, check it in the checkbox, scroll all the way down, and click on `Add permissions`.
+
+In your lambda function, head back to the `Code` tab, and click `Deploy`.
+
+### Fill in the environment variables
+
+Rename `.env.example` to `.env.development`, and then write your AWS Credentials and other env vars.
+
+If you have AWS CLI installed on your PC that configured with a secret access key, you don't need to type them in in the .env file.
 
 # Escape room
 
-## Overview
+## Run
+
+Bring up the database first with
+
+```sh
+docker compose -f compose.dev.yaml up
+```
+
+Wait till you see
+
+```sh
+2025-10-08 01:37:41.432 UTC [1] LOG:  database system is ready to accept connections
+```
+
+Next, you have to migrate the database. Note that you only have to do this once. If you've run it before, don't run it again.
+
+```sh
+npm run reset-db-dev
+# When prompted, type "y" and hit Enter
+```
+
+Then, you can run the website:
+
+```sh
+npm run dev
+```
+
+Once you're finished, close the Next.js app and docker with `Ctrl+C`. You may have to `Ctrl+C` twice.
+
+## Architecture
 
 Currently, a prompt is composed of components. Components can be of 3 types -- text, code, or line break.
 
