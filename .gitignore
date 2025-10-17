@@ -46,3 +46,4 @@ output-template/**
 
 *.zip
 postgres
+prisma/generated/
