@@ -157,7 +157,7 @@ Event listeners that uses user-defined JavaScript code has to be attached dynami
 
 As mentioned earlier, right now it uses Poppins, normalize.css and, he.js.
 
-Question sprites are rendered as circles 32px wide. A sprite by default is rendered aqua; if the user's answer to the question is correct, the sprite is rendered green.
+Questions sprites turn green when the user answers correctly.
 
 For True-False questions, there is a blank option, which is selected by default. This represents neither true nor false.
 
