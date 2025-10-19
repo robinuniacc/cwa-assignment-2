@@ -10,10 +10,13 @@ import { faTrash } from "@fortawesome/free-solid-svg-icons/faTrash";
 import useLocalStorage from "@/hooks/tabs/useLocalStorage";
 import { setCookie } from "@/lib/web";
 import { generateTabId, Tab } from "../../server-actions/tab-generator/tab";
-import { generateHTMLFromTabs } from "../../server-actions/tab-generator/html";
 import Cookies from "js-cookie";
+import useFetchTemplate, { generateHTMLFromTabs } from "./helpers";
 
 export default function Home() {
+  const { tabTitleTemplate, tabPanelTemplate, pageTemplate } =
+    useFetchTemplate();
+
   const [tabs, setTabs] = useState<Tab[]>([
     {
       id: generateTabId(),
@@ -34,11 +37,14 @@ export default function Home() {
   useLocalStorage({ setTabs, setActiveTabId });
 
   useEffect(() => {
-    async function updatePreview() {
-      setHtmlContent(generateHTMLFromTabs(tabs));
-    }
-    updatePreview();
-  }, [tabs]);
+    setHtmlContent(
+      generateHTMLFromTabs(tabs, {
+        tabTitleTemplate: tabTitleTemplate || "",
+        tabPanelTemplate: tabPanelTemplate || "",
+        pageTemplate: pageTemplate || "",
+      }),
+    );
+  }, [pageTemplate, tabPanelTemplate, tabTitleTemplate, tabs]);
 
   // Persist to localStorage whenever tabs or activeId change
   useEffect(() => {
