@@ -2,3 +2,4 @@
 **/*.mov
 prisma/**/*.*
 public/**/*.*
+src/server-actions/tab-generator/**/*.*
