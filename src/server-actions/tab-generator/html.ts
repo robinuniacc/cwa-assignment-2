@@ -1,22 +1,6 @@
 "use server";
 
-import { Tab } from "./tab";
 import { readFileSync } from "fs";
-
-type TabPanelParams = {
-  tabId: string;
-  tabPanelContent: string;
-};
-
-type TabTitleParams = {
-  tabTitle: string;
-  tabId: string;
-};
-
-type TabContentParams = {
-  tabPanelHtmls: string;
-  tabTitleHtmls: string;
-};
 
 const tabTitleTemplate = readFileSync(
   "./src/server-actions/tab-generator/tab-title.template.html",
@@ -33,46 +17,15 @@ const pageTemplate = readFileSync(
   "utf-8",
 );
 
-function generateHTMLFromTemplate(
-  template: string,
-  params: TabPanelParams | TabTitleParams | TabContentParams,
-): string {
-  const parsed = template.replace(/{{\s*(\w+)\s*}}/g, (match, key: string) => {
-    if (key in params) return (params as Record<string, string>)[key];
-    return match;
-  });
-
-  return parsed;
+function getHTMLTemplate(type: "tabTitle" | "tabPanel" | "page"): string {
+  switch (type) {
+    case "tabTitle":
+      return tabTitleTemplate;
+    case "tabPanel":
+      return tabPanelTemplate;
+    case "page":
+      return pageTemplate;
+  }
 }
 
-function generateHTMLFromTabs(tabs: Tab[]) {
-  const tabTitleHtmls = tabs
-    .map((tab) =>
-      generateHTMLFromTemplate(tabTitleTemplate, {
-        tabTitle: tab.title,
-        tabId: tab.id,
-      }),
-    )
-    .join("\n");
-
-  const tabPanelHtmls = tabs
-    .map((tab) =>
-      generateHTMLFromTemplate(tabPanelTemplate, {
-        tabId: tab.id,
-        tabPanelContent: tab.content
-          .split("\n")
-          .map((line) => `            <p>${line}</p>`)
-          .join("\n"),
-      }),
-    )
-    .join("\n");
-
-  const pageHtml = generateHTMLFromTemplate(pageTemplate, {
-    tabTitleHtmls,
-    tabPanelHtmls,
-  });
-
-  return pageHtml;
-}
-
-export { generateHTMLFromTabs };
+export { getHTMLTemplate };
