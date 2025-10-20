@@ -4,7 +4,7 @@ import { Question } from "../typings";
 import { InvokeCommand, LambdaClient } from "@aws-sdk/client-lambda";
 
 const LAMBDA_CLIENT = new LambdaClient({
-  region: process.env.NEXT_PUBLIC_AWS_REGION,
+  region: process.env.AWS_REGION,
 });
 
 export async function POST(request: Request) {

@@ -18,11 +18,11 @@ import {
 
 const S3_CLIENT = new S3Client({});
 const getRoomBgImgKey = (roomId: string) =>
-  `${process.env.NEXT_PUBLIC_S3_PREFIX_UNFINISHED_ROOMS!}/${roomId}/bgimg`;
+  `${process.env.S3_PREFIX_UNFINISHED_ROOMS!}/${roomId}/bgimg`;
 
 function makeS3GetbgImgForRoom(roomId: string) {
   return new GetObjectCommand({
-    Bucket: process.env.NEXT_PUBLIC_S3_BUCKET_NAME!,
+    Bucket: process.env.S3_BUCKET_NAME!,
     Key: getRoomBgImgKey(roomId),
   });
 }
@@ -41,14 +41,14 @@ async function deleteRoom(roomId: string) {
   // Remove room resources from S3
   const listObjsUnfin = await S3_CLIENT.send(
     new ListObjectsV2Command({
-      Bucket: process.env.NEXT_PUBLIC_S3_BUCKET_NAME!,
-      Prefix: process.env.NEXT_PUBLIC_S3_PREFIX_UNFINISHED_ROOMS,
+      Bucket: process.env.S3_BUCKET_NAME!,
+      Prefix: process.env.S3_PREFIX_UNFINISHED_ROOMS,
     }),
   );
   const listObjsFin = await S3_CLIENT.send(
     new ListObjectsV2Command({
-      Bucket: process.env.NEXT_PUBLIC_S3_BUCKET_NAME!,
-      Prefix: process.env.NEXT_PUBLIC_S3_PREFIX_FINISHED_ROOMS,
+      Bucket: process.env.S3_BUCKET_NAME!,
+      Prefix: process.env.S3_PREFIX_FINISHED_ROOMS,
     }),
   );
 
@@ -61,7 +61,7 @@ async function deleteRoom(roomId: string) {
     if (!obj.Key) continue;
     await S3_CLIENT.send(
       new DeleteObjectCommand({
-        Bucket: process.env.NEXT_PUBLIC_S3_BUCKET_NAME!,
+        Bucket: process.env.S3_BUCKET_NAME!,
         Key: obj.Key,
       }),
     );
@@ -255,7 +255,7 @@ async function saveData(latestData: {
   if (latestData.bgImgBlob) {
     await S3_CLIENT.send(
       new PutObjectCommand({
-        Bucket: process.env.NEXT_PUBLIC_S3_BUCKET_NAME!,
+        Bucket: process.env.S3_BUCKET_NAME!,
         Key: getRoomBgImgKey(latestData.room.id),
         Body: Buffer.from(await latestData.bgImgBlob.arrayBuffer()),
         ContentType: latestData.bgImgBlob.type || "",
