@@ -306,7 +306,7 @@ export default function Toolbar({
         <RoomSelector
           rooms={rooms}
           setRooms={setRooms}
-          currRoomId={currRoomId}
+          currRoomId={currRoomId!}
           setCurrRoomId={setCurrRoomId}
         />
         <form>
