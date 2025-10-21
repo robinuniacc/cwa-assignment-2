@@ -122,7 +122,6 @@ export default function Workspace({
       const ids = new Set(newQs.map((q) => q.id));
       if (ids.size !== newQs.length) return questions;
 
-      console.log("old to new qs", newQs, updated);
       return newQs;
     });
   }

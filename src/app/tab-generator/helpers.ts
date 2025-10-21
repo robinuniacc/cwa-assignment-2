@@ -25,7 +25,6 @@ function generateHTMLFromTemplate(
     if (key in params) return (params as Record<string, string>)[key];
     return match;
   });
-  console.log(template);
 
   return parsed;
 }
