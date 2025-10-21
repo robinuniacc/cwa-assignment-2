@@ -3,6 +3,7 @@ import Workspace from "./Workspace";
 import useDbAndS3 from "@/hooks/escape-room/useDbAndS3";
 import { useEffect } from "react";
 import Toolbar, { UseDefaultImgButton } from "./Toolbar";
+import { v4 as uuidv4 } from "uuid";
 
 async function computeInstrinsicImgSize(blob: Blob) {
   const bitmap = await createImageBitmap(blob);
@@ -28,7 +29,7 @@ export default function EscapeRoomPage() {
   useEffect(() => {
     if (!hasAttemptedRestore || isRestoring || rooms.length > 0) return;
 
-    const newRoomId = crypto.randomUUID();
+    const newRoomId = uuidv4();
     setRooms([{ id: newRoomId, name: "My First Room" }]);
     setCurrRoomId(newRoomId);
   }, [hasAttemptedRestore, isRestoring, rooms, setCurrRoomId, setRooms]);

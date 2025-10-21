@@ -12,9 +12,10 @@ import CodePromptEditor from "./CodePromptEditor";
 import TextPromptEditor from "./TextPromptEditor";
 import NewlinePrompt from "./NewlinePrompt";
 import PromptEditorContext from "./promptEditorContext";
+import { v4 as uuidv4 } from "uuid";
 
 export function computePromptId(prompt: Prompt): string {
-  return `${prompt.prompt}-${crypto.randomUUID()}`;
+  return `${prompt.prompt}-${uuidv4()}`;
 }
 
 export default function PromptEditor({

@@ -8,6 +8,7 @@ import { EditorContext } from "./workSpaceContext";
 import EditableQuestionSprite, {
   DEFAULT_QUESTIONS,
 } from "./EditableQuestionSprite";
+import { v4 as uuidv4 } from "uuid";
 
 export default function Workspace({
   questions,
@@ -133,7 +134,7 @@ export default function Workspace({
 
     const newQuestion = {
       ...DEFAULT_QUESTIONS["short-answer"],
-      id: crypto.randomUUID(),
+      id: uuidv4(),
       position: {
         centerX: event.nativeEvent.offsetX,
         centerY: event.nativeEvent.offsetY,

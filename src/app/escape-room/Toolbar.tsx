@@ -20,6 +20,7 @@ import {
   DropdownMenuTrigger,
 } from "../components/shadcn/dropdown-menu";
 import { Question } from "./typings";
+import { v4 as uuidv4 } from "uuid";
 
 const LIMIT_ROOM_NAME_LEN = 20;
 
@@ -51,7 +52,7 @@ function RoomSelector({
   }
 
   function submitCreateNewRoom() {
-    const roomId = crypto.randomUUID();
+    const roomId = uuidv4();
     setRooms([
       ...rooms,
       {

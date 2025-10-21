@@ -5,11 +5,12 @@ import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faAdd } from "@fortawesome/free-solid-svg-icons/faAdd";
 import { faTrash } from "@fortawesome/free-solid-svg-icons";
 import { cn } from "@/lib/utils";
+import { v4 as uuidv4 } from "uuid";
 
 const NEW_CHOICE_PLACEHOLDER = "(new choice)";
 
 function generateChoiceId(choice: string) {
-  return `${choice}-${crypto.randomUUID()}`;
+  return `${choice}-${uuidv4()}`;
 }
 
 function Choice({
