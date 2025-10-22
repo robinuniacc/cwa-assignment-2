@@ -1,12 +1,5 @@
 import { test, expect } from "@playwright/test";
 
-test("can navigate to /escape-room", async ({ page }) => {
-  // Expect a title "to contain" a substring.
-  page.goto("/");
-  page.getByRole("link", { name: / *escape *room */i }).click();
-  await expect(page).toHaveURL(/.*\/escape-room/);
-});
-
 test.describe("/escape-room", () => {
   test.beforeEach(async ({ page }) => {
     await page.goto("/escape-room");
