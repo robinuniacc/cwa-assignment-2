@@ -175,11 +175,11 @@
                   style="margin: 0rem 0 -1rem 0; line-height: 1.5rem"
                 ><code>{prompt}
                 </code></pre>`,
-                newline: `<br/>`,
-              },
+          newline: `<br/>`,
+        },
 
-              "short-answer": {
-                base: `
+        "short-answer": {
+          base: `
                 {prompts}
                 {inputField}
                 <div style="display: flex; justify-content: center; margin-top: 1rem">
@@ -188,14 +188,14 @@
                   </button>
                 </div>
       `,
-                "single-line-blank": `<input id="answer-input" type="text" style="width: 100%" value="{defaultValue}"/>
+          "single-line-blank": `<input id="answer-input" type="text" style="width: 100%" value="{defaultValue}"/>
       `,
-                "multi-line-blank": `<textarea id="answer-input" style="width: 100%; resize: none" rows="1" oninput="handleTextAreaResize(this, event)">{defaultValue}</textarea>
+          "multi-line-blank": `<textarea id="answer-input" style="width: 100%; resize: none" rows="1" oninput="handleTextAreaResize(this, event)">{defaultValue}</textarea>
       `,
-              },
+        },
 
-              "multiple-choice": {
-                base: `{prompts}
+        "multiple-choice": {
+          base: `{prompts}
               <div style="display: flex; flex-direction: column; gap: 0.5rem">
                 {choices}
                   <div style="display: flex; justify-content: center; margin-top: 1rem">
@@ -203,11 +203,11 @@
                       Submit
                     </button>
                   </div>`,
-                choice: `<input id="{choice}-chkbox" type="checkbox" name="mcq" value="{choice}" style="display: none"/>
+          choice: `<input id="{choice}-chkbox" type="checkbox" name="mcq" value="{choice}" style="display: none"/>
                   <label for="{choice}-chkbox" style="padding: 0.25rem; border-radius: 0.375rem; margin-bottom: -0.25rem;">{choice}</label>`,
-              },
+        },
 
-              "true-false": `
+        "true-false": `
               {prompts}
               <div style="display: flex; justify-content: center">
                 <select style="width: 100%; text-align: center; border-radius: 4px" name="true-false">
@@ -223,29 +223,31 @@
                 </div>
             `,
 
-              "fill-in-the-blanks": {
-                base: `{prompts}
+        "fill-in-the-blanks": {
+          base: `{prompts}
         <div style="display: flex; justify-content: center; margin-top: 1rem">
           <button id="submit-ans" type="button">
             Submit
           </button>
         </div>
       `,
-                "non-blank": `<p style="display: inline-block; margin: 0;">{text}</p>`,
-                "single-line-blank": `<input
+          "non-blank": `<pre
+                  style="line-height: 1.5rem; display: inline; font-family: inherit;"
+                >{text}</pre>`,
+          "single-line-blank": `<input
         id="answer-input-{id}"
         type="text"
         value="{defaultValue}"
         style="width: {width}"/>`,
-                "multi-line-blank": `<textarea
+          "multi-line-blank": `<textarea
         id="answer-input-{id}"
         style="display: block; width: 100%; margin-top: 0.25rem; margin-left: {marginLeft}rem; margin-bottom: 0.25rem; resize: none;"
         oninput="handleTextAreaResize(this, event)"
         rows="1"
       >{defaultValue}</textarea>`,
-              },
-            };
-            const CSS_MODAL_SUBMIT_ANS = `
+        },
+      };
+      const CSS_MODAL_SUBMIT_ANS = `
               width: 5rem;
               background-color: #22c95c;
               color: white;
@@ -254,7 +256,7 @@
               border-radius: 0.375rem;
               cursor: pointer;`;
 
-            const QUESTION_SPRITE_HTML_TEMPLATE = `
+      const QUESTION_SPRITE_HTML_TEMPLATE = `
               <img
                 data-question-id="{questionId}"
                 onmouseover="this.style.cursor='pointer'"
@@ -269,7 +271,7 @@
                 src="https://cwa-assignment-2.s3.ap-southeast-2.amazonaws.com/res/question-mark.png"
               ></img>
       `;
-            const QUESTION_SPRITE_CORRECT_HTML_TEMPLATE = `
+      const QUESTION_SPRITE_CORRECT_HTML_TEMPLATE = `
               <img
                 data-question-id="{questionId}"
                 onmouseover="this.style.cursor='pointer'"
@@ -570,7 +572,6 @@
       }
 
       function onSubmitAnyQ(questionId, isCorrect) {
-        console.log(userAnswers);
         closeModal();
 
         // Update question sprite to green if correct/incorrect
@@ -826,15 +827,14 @@
                 // Add non-blanks text before each blank
                 const blankRegexMatch = blanksToRender.next();
                 const blankIdx = blankRegexMatch.value.index;
-
                 let nonBlankText = he.encode(
                   p.prompt.slice(nonBlankStrStart, blankIdx),
                 );
                 if (p.type === "code") {
                   if (isPreviousBlankMultiline)
-                    nonBlankText = nonBlankText.replace(/^( *)\n/g, "$1");
+                    nonBlankText = nonBlankText.replace(/^( *)\n?/g, "$1\n");
                   if (ans.includes("\n"))
-                    nonBlankText = nonBlankText.replace(/\n( *)$/g, "$1");
+                    nonBlankText = nonBlankText.replace(/( *)\n?$/g, "\n");
                 }
 
                 // Render non-blank text
@@ -865,9 +865,6 @@
                 }
                 // Answer is multiline, render <textarea>
                 else if (p.type === "text") {
-                  console.log(
-                    (nonBlankText.match(/ *$/g)?.[0].length || 0) / 2,
-                  );
                   promptHTML += renderHTMLTemplate(
                     HTML_MODAL_TEMPLATES["fill-in-the-blanks"][
                       "multi-line-blank"
