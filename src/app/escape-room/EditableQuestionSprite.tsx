@@ -124,14 +124,14 @@ export default function EditableQuestionSprite({
   });
 
   const { updateQuestion } = useContext(EditorContext);
-  const [localPrompt, setLocalPrompt] = useState<PromptWithId[]>(() =>
+  const [localPrompts, setLocalPrompts] = useState<PromptWithId[]>(() =>
     question.prompt.map((p) => ({ ...p, promptId: computePromptId(p) })),
   );
 
   // Update answers to match blanks count for FITB questions
   useEffect(() => {
     if (question.type !== "fill-in-the-blanks") return;
-    const blanksCt = computeBlanksCt(combineTextBasedPrompts(localPrompt));
+    const blanksCt = computeBlanksCt(combineTextBasedPrompts(localPrompts));
 
     const currAns = question.answer;
     if (currAns.length === blanksCt) return;
@@ -143,12 +143,12 @@ export default function EditableQuestionSprite({
     }
 
     updateQuestion(question.id, { answer: newAns });
-  }, [localPrompt, question, question.id, question.type, updateQuestion]);
+  }, [localPrompts, question, question.id, question.type, updateQuestion]);
 
   useEffect(() => {
     const updatePrompt = () => {
       updateQuestion(question.id, {
-        prompt: localPrompt.map(
+        prompt: localPrompts.map(
           (p) => ({ type: p.type, prompt: p.prompt }) as Prompt,
         ),
       });
@@ -157,7 +157,7 @@ export default function EditableQuestionSprite({
     registerOnClose(updatePrompt);
     return () => deregisterOnClose(updatePrompt);
   }, [
-    localPrompt,
+    localPrompts,
     question.id,
     registerOnClose,
     deregisterOnClose,
@@ -168,7 +168,7 @@ export default function EditableQuestionSprite({
     updateQuestion(question.id, {
       ...DEFAULT_QUESTIONS[newType],
       position: question.position,
-      prompt: localPrompt.map(
+      prompt: localPrompts.map(
         (p) => ({ type: p.type, prompt: p.prompt }) as Prompt,
       ),
     });
@@ -192,7 +192,7 @@ export default function EditableQuestionSprite({
           <SelectItem value="fill-in-the-blanks">Fill In The Blanks</SelectItem>
         </SelectContent>
       </Select>
-      <PromptsEditor prompt={localPrompt} setPrompt={setLocalPrompt} />
+      <PromptsEditor prompt={localPrompts} setPrompt={setLocalPrompts} />
       {renderAnswerEditor(question, {
         registerOnClose: registerOnClose,
         deregisterOnClose: deregisterOnClose,

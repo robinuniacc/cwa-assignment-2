@@ -123,6 +123,7 @@ export default function QuestionSprite({
       positionRef.current.centerX !== question.position.centerX &&
       positionRef.current.centerY !== question.position.centerY
     ) {
+      // Clicking would open the shadcn dialog. We want to suppress it if we just finished a drag.
       setSuppressClickHandlers(true);
       updateQuestion(question.id, { position: positionRef.current });
     }

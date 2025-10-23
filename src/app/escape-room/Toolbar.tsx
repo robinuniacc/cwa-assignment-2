@@ -51,7 +51,7 @@ function RoomSelector({
     setRooms(rooms.filter((r) => r.id !== roomId));
   }
 
-  function submitCreateNewRoom() {
+  function createNewRoom() {
     const roomId = uuidv4();
     setRooms([
       ...rooms,
@@ -147,7 +147,7 @@ function RoomSelector({
               <input type="text" ref={newRoomNameInputRef} />
               <DialogClose asChild>
                 <button
-                  onClick={() => submitCreateNewRoom()}
+                  onClick={() => createNewRoom()}
                   className="text-center relative ml-auto mr-auto mt-1 bg-[var(--color-red-latrobe)] text-white rounded hover:cursor-pointer hover:opacity-80 px-2 py-1"
                 >
                   Submit

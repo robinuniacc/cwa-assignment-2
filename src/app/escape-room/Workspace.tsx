@@ -28,9 +28,8 @@ export default function Workspace({
   const canvasRef = useRef<HTMLDivElement>(null);
   const newQuestionRef = useRef<Question | null>(null);
 
-  const resizingRef = useRef(false);
-  const lastPosRef = useRef<{ x: number; y: number } | null>(null);
-  const initialResizeRef = useRef<{
+  const isResizingRef = useRef(false);
+  const sizeBeforeResizeRef = useRef<{
     startX: number;
     startY: number;
     startWidth: number;
@@ -41,9 +40,8 @@ export default function Workspace({
     e: ReactMouseEvent<HTMLDivElement, MouseEvent>,
   ) {
     e.stopPropagation();
-    resizingRef.current = true;
-    lastPosRef.current = { x: e.clientX, y: e.clientY };
-    initialResizeRef.current = {
+    isResizingRef.current = true;
+    sizeBeforeResizeRef.current = {
       startX: e.clientX,
       startY: e.clientY,
       startWidth: imgSize.width,
@@ -53,9 +51,9 @@ export default function Workspace({
     window.addEventListener("mouseup", handleResizeMouseUp);
   }
   function handleResizeMouseMove(e: MouseEvent) {
-    if (!resizingRef.current || !initialResizeRef.current) return;
+    if (!isResizingRef.current || !sizeBeforeResizeRef.current) return;
     const { startX, startY, startWidth, startHeight } =
-      initialResizeRef.current;
+      sizeBeforeResizeRef.current;
     const newWidth = Math.max(100, startWidth + (e.clientX - startX));
     const newHeight = Math.max(100, startHeight + (e.clientY - startY));
 
@@ -78,9 +76,8 @@ export default function Workspace({
     });
   }
   function handleResizeMouseUp() {
-    resizingRef.current = false;
-    lastPosRef.current = null;
-    initialResizeRef.current = null;
+    isResizingRef.current = false;
+    sizeBeforeResizeRef.current = null;
     window.removeEventListener("mousemove", handleResizeMouseMove);
     window.removeEventListener("mouseup", handleResizeMouseUp);
   }

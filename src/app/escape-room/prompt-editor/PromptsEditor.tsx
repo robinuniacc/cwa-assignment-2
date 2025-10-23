@@ -19,8 +19,8 @@ export function computePromptId(prompt: Prompt): string {
 }
 
 export default function PromptEditor({
-  prompt,
-  setPrompt,
+  prompt: prompts,
+  setPrompt: setPrompts,
 }: {
   prompt: PromptWithId[];
   setPrompt: (newPrompt: PromptWithId[]) => void;
@@ -28,8 +28,8 @@ export default function PromptEditor({
   const draggingPromptIdRef = useRef<PromptWithId["promptId"] | null>(null);
 
   function handleCreatePrompt(type: Prompt["type"]): void {
-    setPrompt([
-      ...prompt,
+    setPrompts([
+      ...prompts,
       type === "newline"
         ? { type, prompt: "", promptId: computePromptId({ type, prompt: "" }) }
         : {
@@ -41,38 +41,38 @@ export default function PromptEditor({
   }
 
   function handleDeletePrompt(promptId: string): void {
-    if (prompt.length === 1) {
+    if (prompts.length === 1) {
       // always keep at least one prompt
       return;
     }
-    setPrompt(prompt.filter((p) => p.promptId !== promptId));
+    setPrompts(prompts.filter((p) => p.promptId !== promptId));
   }
 
   function handleMovePrompt(
     idPromptToMove: PromptWithId["promptId"],
     idPromptToMoveTo: PromptWithId["promptId"],
   ): void {
-    const fromIdx = prompt.findIndex((p) => p.promptId === idPromptToMove);
-    const toIdx = prompt.findIndex((p) => p.promptId === idPromptToMoveTo);
+    const fromIdx = prompts.findIndex((p) => p.promptId === idPromptToMove);
+    const toIdx = prompts.findIndex((p) => p.promptId === idPromptToMoveTo);
     if (fromIdx === -1 || toIdx === -1) return;
 
-    const newPrompt = Array.from(prompt);
-    const [p] = newPrompt.splice(fromIdx, 1);
-    newPrompt.splice(toIdx, 0, p);
-    setPrompt(newPrompt);
+    const newPrompts = Array.from(prompts);
+    const [p] = newPrompts.splice(fromIdx, 1);
+    newPrompts.splice(toIdx, 0, p);
+    setPrompts(newPrompts);
   }
 
   const handleTextBasedPromptChange = useCallback(
     (promptId: string, newVal: string) => {
-      setPrompt(
-        prompt.map((p) =>
+      setPrompts(
+        prompts.map((p) =>
           p.promptId === promptId
             ? ({ ...p, prompt: newVal } as PromptWithId)
             : p,
         ),
       );
     },
-    [prompt, setPrompt],
+    [prompts, setPrompts],
   );
 
   return (
@@ -86,7 +86,7 @@ export default function PromptEditor({
     >
       <div className="grid gap-3">
         <div>
-          {prompt.map((p) => {
+          {prompts.map((p) => {
             switch (p.type) {
               case "text":
                 return <TextPromptEditor key={p.promptId} prompt={p} />;

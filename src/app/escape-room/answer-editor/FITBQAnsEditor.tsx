@@ -5,21 +5,6 @@ import { useState, useEffect, useContext, useRef } from "react";
 import { EditorContext } from "../workSpaceContext";
 import { v4 as uuidv4 } from "uuid";
 
-export function useDebounce<T>(value: T, delay: number): T {
-  const [debouncedValue, setDebouncedValue] = useState(value);
-
-  useEffect(() => {
-    const handler = setTimeout(() => {
-      setDebouncedValue(value);
-    }, delay);
-
-    // cleanup if value or delay changes
-    return () => clearTimeout(handler);
-  }, [value, delay]);
-
-  return debouncedValue;
-}
-
 function Answer({
   answer,
   onAnsChanged,

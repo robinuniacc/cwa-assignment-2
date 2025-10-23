@@ -97,8 +97,7 @@ export default function MCQAnsEditor({
 
     registerOnClose(updateChoices);
     return () => deregisterOnClose(updateChoices);
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [choices, question]);
+  }, [choices, deregisterOnClose, question, registerOnClose, updateQuestion]);
 
   function createNewChoice(): void {
     setChoices([
