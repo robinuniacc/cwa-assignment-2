@@ -178,16 +178,14 @@ function InstructionsDialog({ className }: { className?: string }) {
       <DialogContent>
         <DialogTitle>Instructions</DialogTitle>
         <p>First upload an image</p>
+        <p>The image can be resized by dragging the bottom-right corner</p>
         <p>Add questions by clicking on the image</p>
         <p>Each question can be edited by clicking on it</p>
         <p>Questions can be moved around by dragging it</p>
         <p>To remove a question, ctrl + click on the question</p>
-        <p>
-          When you have many questions, you may find it hard to locate where it
-          is on the canvas. In this case, you can use the question list panel to
-          quickly to select your question to highlight its position on the
-          canvas
-        </p>
+        <p>You can create new rooms, delete rooms, and switch between rooms</p>
+        <p>You can preview the game by clicking on the preview button</p>
+        <p>Save your progress with the save button before exiting</p>
       </DialogContent>
     </Dialog>
   );
@@ -240,6 +238,7 @@ function ChooseImagePanel({
         handleBgImgChange={handleBgImgChange}
         handleDeleteImage={handleDeleteImage}
       />
+      <InstructionsDialog />
     </form>
   );
 }

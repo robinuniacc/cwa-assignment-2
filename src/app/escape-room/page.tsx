@@ -2,7 +2,7 @@
 import Workspace from "./Workspace";
 import useDbAndS3 from "@/hooks/escape-room/useDbAndS3";
 import { useEffect } from "react";
-import Toolbar, { UseDefaultImgButton } from "./Toolbar";
+import Toolbar, { InstructionsDialog, UseDefaultImgButton } from "./Toolbar";
 import { v4 as uuidv4 } from "uuid";
 
 async function computeInstrinsicImgSize(blob: Blob) {
@@ -69,6 +69,7 @@ export default function EscapeRoomPage() {
             handleBgImgChange={handleBgImgChange}
             handleDeleteImage={handleDeleteImage}
           />
+          <InstructionsDialog />
         </form>
       )}
       {bgImgUrl && (
